@@ -1,23 +1,15 @@
-"""Execução diária: coleta → filtro → redação → checagem → arquivo (e, depois, Buffer)."""
+"""Execução diária: coleta → candidatos → sistema de pontos → redação → checagem → Buffer."""
 import json
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import config, cota, emendas, emendas_portal, outros_pncp, pncp, posts_emendas, publicar, redacao, shows
+from . import cota, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
 SAIDA = RAIZ / "saida"
 BRT = timezone(timedelta(hours=-3))
-
-
-FILA = []  # (prioridade, texto) dos posts aprovados na checagem
-
-
-def _enfileirar(post, prioridade):
-    if not post["erros"]:
-        FILA.append((prioridade, post["texto"]))
 
 
 def _carregar_estado():
@@ -40,117 +32,112 @@ def _normalizar_data(txt):
     return d if int(d[:4]) > 1900 else d[4:] + d[2:4] + d[:2]
 
 
+def _candidatos_pncp(data, estado, log):
+    contratos = pncp.contratos_do_dia(data)
+    c = [f for f in shows.selecionar(contratos) + outros_pncp.selecionar(contratos) if f["id"] not in estado["vistos"]]
+    log.append(f"PNCP {data}: {len(contratos)} contratos | candidatos (shows, publicidade, inusitadas): {len(c)}")
+    return c
+
+
+def _candidatos_emendas(estado, log):
+    cadastro = emendas.parlamentares()
+    todas = emendas_portal.baixar()
+    ano = datetime.now(BRT).year
+    pagos, primeira = emendas_portal.pagamentos_do_dia(todas, RAIZ / "dados" / "emendas_recebido.json", ano)
+    c = []
+    if primeira:
+        log.append("Emendas: primeira execução, base criada. Pagamentos do dia a partir da próxima.")
+    else:
+        c = [f for f in (posts_emendas.fatos_pagamento(r, cadastro) for r in pagos) if f]
+        log.append(f"Emendas: {len(pagos)} pagamentos acima do corte | {len(c)} com deputado/senador identificado")
+    # Raio-X do dia (rodízio sorteado entre deputados e senadores)
+    if estado.get("raiox_dia") != datetime.now(BRT).strftime("%Y-%m-%d"):
+        planos = emendas_portal.para_planos(todas)
+        for _ in range(50):
+            rx = emendas.raio_x(emendas.proximo_raio_x(estado, cadastro), planos, cadastro)
+            if rx:
+                c.append(posts_emendas.post_raio_x(rx))
+                break
+    return c
+
+
+def _candidatos_cota(estado, log):
+    ano = datetime.now(BRT).year
+    notas = cota.baixar(ano)
+    vistos = set(estado.get("cota_ids", []))
+    c = []
+    if not vistos:
+        log.append("Cota: primeira execução, base criada.")
+    else:
+        c, _ = cota.gatilhos(notas, vistos)
+        log.append(f"Cota parlamentar: {len(c)} gatilhos")
+    estado["cota_ids"] = ["cota-" + str(n["id"]) for n in cota.recentes(notas)]
+    return c
+
+
 def executar(data=None):
     data = (_normalizar_data(data or os.environ.get("DATA"))
             or (datetime.now(BRT) - timedelta(days=1)).strftime("%Y%m%d"))
-    ligar_publicacao = os.environ.get("PUBLICAR", "false").lower() == "true"
-    print(f"Data: {data} | publicar: {ligar_publicacao}")
-
+    ligar = os.environ.get("PUBLICAR", "false").lower() == "true"
+    hoje = datetime.now(BRT).strftime("%Y-%m-%d")
+    print(f"Data: {data} | publicar: {ligar}")
     estado = _carregar_estado()
-    contratos = pncp.contratos_do_dia(data)
-    achados = [f for f in shows.selecionar(contratos) if f["id"] not in estado["vistos"]][: config.MAX_SHOWS_DIA]
-    achados += [f for f in outros_pncp.selecionar(contratos) if f["id"] not in estado["vistos"]][: config.MAX_OUTROS_PNCP_DIA]
-    print(f"Shows acima do corte: {len(achados)}")
+    log = [f"# Robô – dados de {data[6:]}/{data[4:6]}/{data[:4]} – execução {datetime.now(BRT):%d/%m %H:%M}", ""]
 
-    linhas = [f"# Posts – {data[6:]}/{data[4:6]}/{data[:4]}",
-              f"Contratos no PNCP: {len(contratos)} | shows acima do corte: {len(achados)}", ""]
-    for f in achados:
-        estado["contador_posts"] += 1
-        pedir = estado["contador_posts"] % config.COMENTARIO_A_CADA == 0
-        post = redacao.montar(f, pedir)
+    candidatos = []
+    for nome, fn in [("PNCP", lambda: _candidatos_pncp(data, estado, log)),
+                     ("Emendas", lambda: _candidatos_emendas(estado, log)),
+                     ("Cota", lambda: _candidatos_cota(estado, log))]:
+        try:
+            candidatos += fn()
+        except Exception as e:  # noqa: BLE001
+            log.append(f"Erro em {nome}: {e}")
+            print(f"Erro {nome}: {e}")
+
+    pop = pontos.Populacao(RAIZ / "dados" / "populacao.json")
+    escolhidos = pontos.escolher(candidatos, estado, hoje, pop)
+    log += ["", f"Candidatos: {len(candidatos)} | escolhidos pelo sistema de pontos: {len(escolhidos)} "
+                f"(já publicados hoje: {estado.get('pub_qtd', 0)})", ""]
+
+    aprovados = []
+    for f in escolhidos:
+        post = redacao.montar(f, True)
         status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
-        linhas += [f"## {status} ({post['origem']}, tags: {post['variante_tag']})", "```", post["texto"], "```",
-                   f"Objeto: {f['objeto']}", ""]
-        _enfileirar(post, 2)
-        estado["vistos"].append(f["id"])
-        estado["vistos"].extend(f.get("ids_extras", []))
+        hab = f" | R$/hab {f['por_habitante']:.2f}" if f.get("por_habitante") else ""
+        log += [f"## {status} | {f.get('tipo')} | nota {f['nota']}{hab} | tags {post['variante_tag']}",
+                "```", post["texto"], "```", f"Objeto: {f.get('objeto', '')[:300]}", ""]
+        if not post["erros"]:
+            aprovados.append((f, post["texto"]))
 
-    linhas += _bloco_emendas(estado)
-    linhas += _bloco_cota(estado)
+    # o que não foi escolhido fica registrado, com a nota
+    resto = [f for f in candidatos if f not in escolhidos]
+    if resto:
+        log += ["", "### Não escolhidos (nota)"] + [
+            f"- {f.get('nota', '?')} | {f.get('tipo')} | {f.get('manchete_padrao') or f.get('orgao', '')}"[:160]
+            for f in sorted(resto, key=lambda f: -f.get("nota", 0))[:30]]
 
-    if ligar_publicacao and FILA:
-        FILA.sort(key=lambda x: x[0])
-        # intercala categorias: o sort é estável, então mantém a ordem de valor dentro de cada uma
-        hoje = datetime.now(BRT).strftime("%Y-%m-%d")
-        if estado.get("pub_dia") != hoje:
-            estado["pub_dia"], estado["pub_qtd"] = hoje, 0
-        vagas = max(0, publicar.MAX_POR_DIA - estado.get("pub_qtd", 0))
-        resultados = publicar.agendar([t for _, t in FILA][:vagas]) if vagas else []
-        estado["pub_qtd"] = estado.get("pub_qtd", 0) + sum(1 for _, r in resultados if r.startswith("agendado"))
-        linhas += ["", "# Publicação (Buffer)", ""] + [f"- {r}: {t.splitlines()[0][:90]}" for t, r in resultados]
-    elif FILA:
-        linhas += ["", f"Publicação desligada: {len(FILA)} posts prontos."]
+    if ligar and aprovados:
+        resultados = publicar.agendar([t for _, t in aprovados])
+        publicados = [f for (f, _), (_, r) in zip(aprovados, resultados) if r.startswith("agendado")]
+        pontos.registrar(estado, publicados)
+        log += ["", "# Publicação (Buffer)", ""] + [f"- {r}: {t.splitlines()[0][:90]}" for t, r in resultados]
+        for f in publicados:
+            estado["vistos"].append(f["id"])
+            estado["vistos"].extend(f.get("ids_extras", []))
+            if f.get("tipo") == "raiox":
+                estado["raiox_dia"] = hoje
+
+    # tudo que foi avaliado hoje não volta amanhã
+    for f in candidatos:
+        if f.get("tipo") != "raiox":
+            estado["vistos"].append(f["id"])
+            estado["vistos"].extend(f.get("ids_extras", []))
 
     SAIDA.mkdir(exist_ok=True)
     arq = SAIDA / f"{data}.md"
-    arq.write_text("\n".join(linhas), encoding="utf-8")
+    arq.write_text("\n".join(log), encoding="utf-8")
     _salvar_estado(estado)
     print(f"Gravado: {arq.relative_to(RAIZ)}")
-
-
-def _bloco_emendas(estado):
-    linhas = ["", "# Emendas parlamentares (Portal da Transparência)", ""]
-    try:
-        cadastro = emendas.parlamentares()
-        print(f"Parlamentares no cadastro: {len(cadastro)}")
-        todas = emendas_portal.baixar()
-        ano = datetime.now(BRT).year
-        pagos, primeira = emendas_portal.pagamentos_do_dia(todas, RAIZ / "dados" / "emendas_recebido.json", ano)
-        if primeira:
-            linhas.append("Primeira execução: base de valores pagos criada. Pagamentos do dia a partir de amanhã.")
-        else:
-            fatos = [f for f in (posts_emendas.fatos_pagamento(r, cadastro) for r in pagos) if f]
-            fatos.sort(key=lambda f: (f["tipo"] != "emenda_fora", -f["valor"]))
-            linhas.append(f"Pagamentos novos acima do corte: {len(pagos)} | com parlamentar identificado: {len(fatos)}")
-            for f in fatos[: emendas_portal.MAX_POSTS]:
-                estado["contador_posts"] += 1
-                post = redacao.montar(f, estado["contador_posts"] % config.COMENTARIO_A_CADA == 0)
-                _enfileirar(post, 1 if f["tipo"] == "emenda_fora" else 3)
-                status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
-                linhas += [f"## {status} ({f['tipo']})", "```", post["texto"], "```", ""]
-
-        # Raio-X do dia (rodízio), com valores pagos desde 2014
-        planos = emendas_portal.para_planos(todas)
-        for _ in range(30):
-            nome = emendas.proximo_raio_x(estado, cadastro)
-            rx = emendas.raio_x(nome, planos, cadastro)
-            if rx:
-                th = posts_emendas.thread_raio_x(rx)
-                status = "OK" if not th["erros"] else "BLOQUEADO: " + "; ".join(th["erros"])
-                linhas += [f"## Raio-X do dia — {status}"]
-                for t in th["posts"]:
-                    linhas += ["```", t, "```"]
-                break
-    except Exception as e:  # noqa: BLE001
-        linhas.append(f"Erro no bloco de emendas: {e}")
-        print(f"Erro emendas: {e}")
-    return linhas
-
-
-def _bloco_cota(estado):
-    linhas = ["", "# Cota parlamentar (Câmara)", ""]
-    try:
-        ano = datetime.now(BRT).year
-        notas = cota.baixar(ano)
-        vistos = set(estado.get("cota_ids", []))
-        if not vistos:
-            linhas.append(f"Primeira execução: base criada com {len(cota.recentes(notas))} notas recentes de {ano}. "
-                          "Posts a partir de amanhã.")
-            fatos = []
-        else:
-            fatos, _ = cota.gatilhos(notas, vistos)
-            linhas.append(f"Gatilhos disparados: {len(fatos)}")
-        for f in fatos:
-            estado["contador_posts"] += 1
-            post = redacao.montar(f, estado["contador_posts"] % config.COMENTARIO_A_CADA == 0)
-            _enfileirar(post, 2)
-            status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
-            linhas += [f"## {status} ({f['tipo']})", "```", post["texto"], "```", ""]
-        estado["cota_ids"] = ["cota-" + str(n["id"]) for n in cota.recentes(notas)]
-    except Exception as e:  # noqa: BLE001
-        linhas.append(f"Erro no bloco da cota: {e}")
-        print(f"Erro cota: {e}")
-    return linhas
 
 
 if __name__ == "__main__":

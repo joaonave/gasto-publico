@@ -56,6 +56,7 @@ def fatos(c):
         "tipo": "show",
         "orgao": (c.get("orgaoEntidade") or {}).get("razaoSocial", ""),
         "municipio": municipio,
+        "cod_ibge": (c.get("unidadeOrgao") or {}).get("codigoIbge", ""),
         "uf": uf,
         "fornecedor": c.get("nomeRazaoSocialFornecedor", ""),
         "objeto": (c.get("objetoContrato") or "").strip(),

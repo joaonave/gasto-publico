@@ -80,3 +80,22 @@ def fatos_pagamento(r, cadastro):
         "contexto": "Pagamento de emenda parlamentar." + (" O parlamentar foi eleito por outro estado." if fora else ""),
         "link": f"https://portaldatransparencia.gov.br/emendas/detalhe?codigoEmenda={r['codigo']}",
     }
+
+
+def post_raio_x(rx):
+    """Raio-X em um post só (o Buffer publica post simples)."""
+    sigla = f"{rx['partido']}-{rx['uf']}".strip("-")
+    top = rx["top"][0] if rx["top"] else None
+    pct = 100 * rx["fora_do_estado"] / rx["total"] if rx["total"] else 0
+    manchete = f"RAIO-X: {rx['cargo']} {rx['nome']} ({sigla}) TEVE {valor_manchete(rx['total'])} PAGOS EM EMENDAS DESDE 2014".upper()
+    linha = ""
+    if top:
+        linha = f"Maior destino: {top['destino'].title()} ({top['uf']}), {valor_manchete(top['valor'])}."
+    if rx["uf"] and pct >= 1:
+        linha += f" {pct:.0f}% foi para fora de {rx['uf']}."
+    return {
+        "id": "raiox-" + rx["nome"], "tipo": "raiox", "valor": rx["total"],
+        "valor_manchete": valor_manchete(rx["total"]), "manchete_padrao": manchete,
+        "linha_fato": linha.strip(), "contexto": linha.strip(), "uf": rx["uf"],
+        "link": "https://portaldatransparencia.gov.br/emendas",
+    }

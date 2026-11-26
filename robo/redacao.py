@@ -126,6 +126,8 @@ COMENTARIOS = {
                   "O cardápio do contribuinte é outro.", "Na sua casa tem isso todo dia?"],
     "cota": ["Tudo dentro da regra. Esse é o problema.", "Reembolsado com carinho pelo contribuinte.",
              "Mandato dá fome.", "A regra permite. Você paga.", "Trabalho duro exige conforto."],
+    "raiox": ["Cada um sabe onde planta.", "O mapa do dinheiro conta a história.",
+              "Amanhã tem outro.", "Guarde esse nome."],
     "emenda": ["Coincidências da política.", "Generosidade com o dinheiro dos outros.",
                "O mapa do voto explica muita coisa.", "Brasília manda. A gente paga.",
                "Cada um com suas prioridades."],
@@ -139,7 +141,7 @@ def _comentario_banco(f):
     return lista[sum(map(ord, str(f.get("id", "")))) % len(lista)]
 
 
-TAG_TIPO = {"cota": "#CotaParlamentar", "emenda": "#EmendaPix"}  # só temas que as pessoas buscam
+TAG_TIPO = {"cota": "#CotaParlamentar", "emenda": "#EmendasParlamentares"}  # só temas que as pessoas buscam
 
 ESTADOS = {"AC": "Acre", "AL": "Alagoas", "AP": "Amapa", "AM": "Amazonas", "BA": "Bahia", "CE": "Ceara",
            "DF": "DistritoFederal", "ES": "EspiritoSanto", "GO": "Goias", "MA": "Maranhao", "MT": "MatoGrosso",
@@ -200,7 +202,7 @@ def montar(f, pedir_comentario):
     if not comentario:
         comentario = _comentario_banco(f)
     erros = checar(f, manchete, comentario)
-    embaixo = comentario
+    embaixo = f"{f['linha_fato']}\n\n{comentario}" if f.get("tipo") == "raiox" and f.get("linha_fato") else comentario
     post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{_hashtags(f)}".rstrip()
     if len(post) - len(f["link"]) + 23 > 280:  # sem espaço: tira as hashtags, nunca o fato
         post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}"

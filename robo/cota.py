@@ -19,7 +19,7 @@ URL = "https://www.camara.leg.br/cotas/Ano-{ano}.csv.zip"
 REFEICAO_MIN = 300          # R$ numa única nota de alimentação
 MAIOR_DO_DIA_MIN = 5_000    # R$ para o "maior gasto do dia" virar post
 FORNECEDOR_GABINETES = 30   # fornecedor atendendo N ou mais deputados no ano
-MAX_POSTS = 3
+MAX_POSTS = 20  # a escolha final é do sistema de pontos
 JANELA_DIAS = 60            # só olha notas emitidas nos últimos N dias (mantém o estado pequeno)
 
 CAMPOS = {  # nome lógico -> nomes possíveis no CSV
