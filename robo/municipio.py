@@ -1,7 +1,7 @@
 """Dados oficiais do município para o 1º comentário: IDHM (PNUD via IBGE Cidades) e saneamento (IBGE, Censo 2022).
 
 Consulta por município, só para os posts do dia, com cache em dados/municipios.json.
-Tabelas verificadas pela sonda (dados/sonda): SIDRA 6909 (água), 7555 (esgoto), IBGE Cidades pesquisa 10111 (IDHM).
+Tabelas verificadas em 26/11/2026: SIDRA 6909 (água), 7555 (esgoto), IBGE Cidades pesquisa 10111 (IDHM).
 """
 import json
 from pathlib import Path
