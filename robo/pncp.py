@@ -25,7 +25,7 @@ def contratos_do_dia(data_aaaammdd):
     for t in config.PNCP_TAMANHOS_PAGINA:
         r, status = _get({"dataInicial": data_aaaammdd, "dataFinal": data_aaaammdd,
                           "pagina": 1, "tamanhoPagina": t})
-        if status == 400:
+        if status in (400, 422) and r is not None and "tamanho" in r.text.lower():
             print(f"  PNCP recusou tamanhoPagina={t}, reduzindo")
             continue
         tamanho = t
@@ -34,7 +34,8 @@ def contratos_do_dia(data_aaaammdd):
         raise RuntimeError("PNCP recusou todos os tamanhos de página")
     if r is None:
         return []
-    r.raise_for_status()
+    if r.status_code >= 400:
+        raise RuntimeError(f"PNCP {r.status_code}: {r.text[:300]}")
     corpo = r.json()
     total_paginas = corpo.get("totalPaginas", 1)
     itens = list(corpo.get("data", []))

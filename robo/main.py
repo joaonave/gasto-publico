@@ -24,8 +24,17 @@ def _salvar_estado(e):
     ESTADO.write_text(json.dumps(e, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
+def _normalizar_data(txt):
+    """Aceita 20261102, 2026-11-02, 2026/11/02 ou 02/11/2026."""
+    d = "".join(ch for ch in (txt or "") if ch.isdigit())
+    if len(d) != 8:
+        return None
+    return d if int(d[:4]) > 1900 else d[4:] + d[2:4] + d[:2]
+
+
 def executar(data=None):
-    data = data or os.environ.get("DATA") or (datetime.now(BRT) - timedelta(days=1)).strftime("%Y%m%d")
+    data = (_normalizar_data(data or os.environ.get("DATA"))
+            or (datetime.now(BRT) - timedelta(days=1)).strftime("%Y%m%d"))
     publicar = os.environ.get("PUBLICAR", "false").lower() == "true"
     print(f"Data: {data} | publicar: {publicar}")
 
