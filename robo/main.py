@@ -59,7 +59,7 @@ def executar(data=None):
         pedir = estado["contador_posts"] % config.COMENTARIO_A_CADA == 0
         post = redacao.montar(f, pedir)
         status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
-        linhas += [f"## {status} ({post['origem']})", "```", post["texto"], "```",
+        linhas += [f"## {status} ({post['origem']}, tags: {post['variante_tag']})", "```", post["texto"], "```",
                    f"Objeto: {f['objeto']}", ""]
         _enfileirar(post, 2)
         estado["vistos"].append(f["id"])

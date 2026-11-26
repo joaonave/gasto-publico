@@ -139,12 +139,25 @@ ESTADOS = {"AC": "Acre", "AL": "Alagoas", "AP": "Amapa", "AM": "Amazonas", "BA":
            "SE": "Sergipe", "TO": "Tocantins"}
 
 
+# Teste A/B/C: o X não mostra volume de hashtag; o robô alterna os conjuntos e mede pelo Buffer.
+VARIANTES_TAG = ["local", "politica", "sem"]
+
+
+def _variante(f):
+    return VARIANTES_TAG[sum(map(ord, str(f.get("id", "")))) % len(VARIANTES_TAG)]
+
+
 def _hashtags(f):
     """Busca no X: cidade + UF + tema. Sem acento e sem espaço; nunca hashtag de trending."""
     import unicodedata
     def limpa(t):
         t = unicodedata.normalize("NFKD", t or "").encode("ascii", "ignore").decode()
         return "".join(p.capitalize() for p in re.split(r"[^A-Za-z0-9]+", t) if p)
+    v = _variante(f)
+    if v == "sem":
+        return ""
+    if v == "politica":
+        return "#política #DinheiroPúblico"
     tags = []
     if f.get("municipio"):
         tags.append("#" + limpa(f["municipio"]))
@@ -178,11 +191,12 @@ def montar(f, pedir_comentario):
         comentario = _comentario_banco(f)
     erros = checar(f, manchete, comentario)
     embaixo = f"{comentario}\n\n{_linha_fato(f)}" if comentario else _linha_fato(f)
-    post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{_hashtags(f)}"
+    post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{_hashtags(f)}".rstrip()
     if len(post) - len(f["link"]) + 23 > 280:  # sem espaço: tira as hashtags, nunca o fato
         post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}"
     # X conta link como 23 caracteres
     tamanho = len(post) - len(f["link"]) + 23
     if tamanho > 280:
         erros.append(f"post com {tamanho} caracteres")
-    return {"texto": post, "erros": erros, "origem": origem, "comentario": bool(comentario)}
+    return {"texto": post, "erros": erros, "origem": origem, "comentario": bool(comentario),
+            "variante_tag": _variante(f)}
