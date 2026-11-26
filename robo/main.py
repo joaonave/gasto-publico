@@ -4,12 +4,20 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import config, cota, emendas, pncp, posts_emendas, redacao, shows
+from . import config, cota, emendas, pncp, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
 SAIDA = RAIZ / "saida"
 BRT = timezone(timedelta(hours=-3))
+
+
+FILA = []  # (prioridade, texto) dos posts aprovados na checagem
+
+
+def _enfileirar(post, prioridade):
+    if not post["erros"]:
+        FILA.append((prioridade, post["texto"]))
 
 
 def _carregar_estado():
@@ -52,12 +60,19 @@ def executar(data=None):
         status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
         linhas += [f"## {status} ({post['origem']})", "```", post["texto"], "```",
                    f"Objeto: {f['objeto']}", ""]
-        if publicar and not post["erros"]:
-            pass  # Buffer entra na próxima etapa
+        _enfileirar(post, 2)
         estado["vistos"].append(f["id"])
 
     linhas += _bloco_emendas(estado)
     linhas += _bloco_cota(estado)
+
+    if publicar and FILA:
+        FILA.sort(key=lambda x: x[0])
+        # intercala categorias: o sort é estável, então mantém a ordem de valor dentro de cada uma
+        resultados = publicar.agendar([t for _, t in FILA])
+        linhas += ["", "# Publicação (Buffer)", ""] + [f"- {r}: {t.splitlines()[0][:90]}" for t, r in resultados]
+    elif FILA:
+        linhas += ["", f"Publicação desligada: {len(FILA)} posts prontos."]
 
     SAIDA.mkdir(exist_ok=True)
     arq = SAIDA / f"{data}.md"
@@ -84,6 +99,7 @@ def _bloco_emendas(estado):
             for f in novos[: config.MAX_POSTS_DIA]:
                 estado["contador_posts"] += 1
                 post = redacao.montar(f, estado["contador_posts"] % config.COMENTARIO_A_CADA == 0)
+                _enfileirar(post, 1 if f["tipo"] == "emenda_fora" else 3)
                 status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
                 linhas += [f"## {status} ({f['tipo']})", "```", post["texto"], "```", ""]
         estado["pix_ids"] = [p["id"] for p in hoje]
@@ -121,6 +137,7 @@ def _bloco_cota(estado):
         for f in fatos:
             estado["contador_posts"] += 1
             post = redacao.montar(f, estado["contador_posts"] % config.COMENTARIO_A_CADA == 0)
+            _enfileirar(post, 2)
             status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
             linhas += [f"## {status} ({f['tipo']})", "```", post["texto"], "```", ""]
         estado["cota_ids"] = ["cota-" + str(n["id"]) for n in cota.recentes(notas)]
