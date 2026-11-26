@@ -13722,8 +13722,11 @@
   "KENISTON BRAGA",
   "CRISTIANE LOPES"
  ],
- "pos_raio_x": 36,
+ "pos_raio_x": 37,
  "pub_dia": "2026-11-26",
  "pub_qtd": 10,
- "pub_cat": {}
+ "pub_cat": {},
+ "manchetes_dia": {
+  "2026-11-26": []
+ }
 }
