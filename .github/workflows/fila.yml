@@ -20,10 +20,20 @@ jobs:
           mkdir -p dados/diag
           T="${{ inputs.apagar }}"; [ -z "$T" ] && [ -f dados/apagar.txt ] && T="$(cat dados/apagar.txt)"; if [ -n "$T" ]; then python -m robo.fila --apagar "$T" > dados/diag/fila.txt 2>&1 || true; fi
           python -m robo.fila --listar >> dados/diag/fila.txt 2>&1 || true
-          { for u in https://diaad.s3.sa-east-1.amazonaws.com/sim/Mortalidade_Geral_2023.csv https://diaad.s3.sa-east-1.amazonaws.com/sim/Mortalidade_Geral_2024.csv https://diaad.s3.sa-east-1.amazonaws.com/sim/DO24OPEN.csv; do echo "== $u"; curl -sI -m 30 "$u" | head -5; done
-            echo "== ftp CID10/DORES"; curl -s -m 60 ftp://ftp.datasus.gov.br/dissemin/publicos/SIM/CID10/DORES/ | tail -8
-            echo "== ftp PRELIM/DORES"; curl -s -m 60 ftp://ftp.datasus.gov.br/dissemin/publicos/SIM/PRELIM/DORES/ | tail -8
-          } > dados/diag/sim.txt 2>&1 || true
+          python - > dados/diag/raiox.txt 2>&1 <<'PY' || true
+          from robo import emendas, emendas_portal, posts_emendas
+          cad = emendas.parlamentares()
+          planos = emendas_portal.para_planos(emendas_portal.baixar())
+          alvo = open("dados/apagar.txt").read().strip().replace("raiox:", "")
+          nomes = [n for n in cad if alvo in emendas.norm(n)] or sorted({x["parlamentar"] for x in planos if alvo in emendas.norm(x["parlamentar"])})
+          print("nomes:", nomes)
+          for n in nomes:
+              rx = emendas.raio_x(n, planos, cad)
+              if rx:
+                  print(posts_emendas.post_raio_x(rx)["manchete_padrao"]); print(posts_emendas.post_raio_x(rx)["linha_fato"])
+                  print("por ano:", {a: round(v / 1e6, 2) for a, v in rx["por_ano"].items()})
+                  for t in rx["top"]: print(" ", t["destino"], t["uf"], round(t["valor"] / 1e6, 2))
+          PY
           python -c "from pathlib import Path; from robo import municipio as m; M=m.Municipios(Path('/tmp/x.json')); [print(c, M.dados(c), m.comentario({'municipio':n,'uf':u}, M.dados(c)), sep='\n') for c,n,u in (('2110302','Santo Antônio dos Lopes','MA'),('3106200','Belo Horizonte','MG'))]" > dados/diag/municipio.txt 2>&1 || true
       - run: |
           git config user.name "github-actions[bot]"
