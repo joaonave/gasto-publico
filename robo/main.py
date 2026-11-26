@@ -117,6 +117,10 @@ def executar(data=None):
         hab = f" | R$/hab {f['por_habitante']:.2f}" if f.get("por_habitante") else ""
         log += [f"## {status} | {f.get('tipo')} | nota {f['nota']}{hab} | tags {post['variante_tag']}",
                 "```", post["texto"], "```", f"Objeto: {f.get('objeto', '')[:300]}", ""]
+        ia = qa.revisar_ia(f, post["texto"]) if not post["erros"] else []
+        if ia:
+            log.append(f"Segurado pela IA: {'; '.join(ia)}")
+            continue
         if not post["erros"]:
             nome_card = f"cards/{hoje}/{abs(hash(f['id'])) % 10**10}.png"
             try:
