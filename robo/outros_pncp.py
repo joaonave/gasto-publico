@@ -18,7 +18,7 @@ INUSITADAS = {
 }
 INUSITADA_MIN = 20_000
 INUSITADA_EXCLUIR = re.compile(r"seguran[çc]a p[úu]blica|pol[íi]cia|resgate|samu|bombeiro|"
-                               r"merenda|alimenta[çc][ãa]o escolar|PNAE|hospital|\\bobras?\\b|reforma|engenharia|clube|constru[çc]", re.IGNORECASE)
+                               r"merenda|alimenta[çc][ãa]o escolar|PNAE|hospital|\bobras?\b|reforma|engenharia|clube|constru[çc]", re.IGNORECASE)
 
 
 def _orgao(f):
