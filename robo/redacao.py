@@ -33,9 +33,16 @@ def _grok(fatos, pedir_comentario):
     chave = os.environ.get("XAI_KEY")
     if not chave:
         return None
-    entrada = {k: fatos[k] for k in ("orgao", "municipio", "uf", "fornecedor", "objeto",
-                                      "valor_manchete", "inclui_estrutura")}
-    entrada["pedir_comentario"] = pedir_comentario
+    if fatos.get("manchete_padrao"):
+        if not pedir_comentario:
+            return None
+        entrada = {"manchete": fatos["manchete_padrao"], "contexto": fatos.get("contexto", ""),
+                   "pedir_comentario": True,
+                   "instrucao": "Devolva a manchete exatamente igual e escreva só o comentário."}
+    else:
+        entrada = {k: fatos[k] for k in ("orgao", "municipio", "uf", "fornecedor", "objeto",
+                                          "valor_manchete", "inclui_estrutura")}
+        entrada["pedir_comentario"] = pedir_comentario
     r = requests.post(
         config.XAI_URL,
         headers={"Authorization": f"Bearer {chave}"},
@@ -56,6 +63,8 @@ def _grok(fatos, pedir_comentario):
 
 
 def _manchete_padrao(f):
+    if f.get("manchete_padrao"):
+        return f["manchete_padrao"]
     orgao = f["orgao"].upper()
     if orgao.startswith("MUNICIPIO DE "):
         orgao = "PREFEITURA DE " + orgao[len("MUNICIPIO DE "):]
@@ -65,11 +74,16 @@ def _manchete_padrao(f):
 
 
 def _linha_fato(f):
+    if f.get("linha_fato"):
+        return f["linha_fato"]
     partes = [f"{f['fornecedor']}", f"{f['valor_exato']}"]
     if f["data_assinatura"]:
         partes.append(f"assinado em {f['data_assinatura']}")
     return " | ".join(p for p in partes if p)
 
+
+LINKS_OK = ("https://pncp.gov.br/", "https://api.transferegov.gestao.gov.br/",
+            "https://portaldatransparencia.gov.br/")
 
 PROIBIDAS = re.compile(r"corrup|desvi|roub|superfatur|propina|ladr|crime|fraud", re.IGNORECASE)
 
@@ -88,7 +102,7 @@ def checar(f, manchete, comentario):
         erros.append("comentário com número")
     if PROIBIDAS.search(manchete + " " + comentario):
         erros.append("palavra proibida (acusação)")
-    if not f["link"].startswith("https://pncp.gov.br/"):
+    if not f["link"].startswith(LINKS_OK):
         erros.append("link inválido")
     return erros
 
@@ -99,7 +113,7 @@ def montar(f, pedir_comentario):
     try:
         g = _grok(f, pedir_comentario)
         if g:
-            m = (g.get("manchete") or "").strip()
+            m = f.get("manchete_padrao") or (g.get("manchete") or "").strip()
             c = (g.get("comentario") or "").strip() if pedir_comentario else ""
             if m and not checar(f, m, c):
                 manchete, comentario, origem = m, c, "grok"

@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import config, pncp, redacao, shows
+from . import config, emendas, pncp, posts_emendas, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -56,11 +56,52 @@ def executar(data=None):
             pass  # Buffer entra na próxima etapa
         estado["vistos"].append(f["id"])
 
+    linhas += _bloco_emendas(estado)
+
     SAIDA.mkdir(exist_ok=True)
     arq = SAIDA / f"{data}.md"
     arq.write_text("\n".join(linhas), encoding="utf-8")
     _salvar_estado(estado)
     print(f"Gravado: {arq.relative_to(RAIZ)}")
+
+
+def _bloco_emendas(estado):
+    linhas = ["", "# Emendas Pix", ""]
+    try:
+        cadastro = emendas.parlamentares()
+        print(f"Parlamentares no cadastro: {len(cadastro)}")
+        todos = emendas.carregar_tudo(RAIZ / "dados" / "emendas")
+        ano = str(max(emendas.ANOS))
+        hoje = [p for p in todos if str(p["ano"]) == ano]
+        ids_ant = set(estado.get("pix_ids", []))
+        if not ids_ant:
+            linhas.append(f"Primeira execução: base criada com {len(hoje)} planos de {ano}. Novidades a partir de amanhã.")
+        else:
+            novos = [posts_emendas.fatos_emenda(p, cadastro) for p in emendas.novos_planos(hoje, ids_ant)]
+            novos.sort(key=lambda f: (f["tipo"] != "emenda_fora", -f["valor"]))
+            linhas.append(f"Planos novos hoje: {len(novos)}")
+            for f in novos[: config.MAX_POSTS_DIA]:
+                estado["contador_posts"] += 1
+                post = redacao.montar(f, estado["contador_posts"] % config.COMENTARIO_A_CADA == 0)
+                status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
+                linhas += [f"## {status} ({f['tipo']})", "```", post["texto"], "```", ""]
+        estado["pix_ids"] = [p["id"] for p in hoje]
+
+        # Raio-X do dia (rodízio)
+        for _ in range(20):
+            nome = emendas.proximo_raio_x(estado, cadastro)
+            rx = emendas.raio_x(nome, todos, cadastro)
+            if rx:
+                th = posts_emendas.thread_raio_x(rx)
+                status = "OK" if not th["erros"] else "BLOQUEADO: " + "; ".join(th["erros"])
+                linhas += [f"## Raio-X do dia — {status}"]
+                for t in th["posts"]:
+                    linhas += ["```", t, "```"]
+                break
+    except Exception as e:  # noqa: BLE001
+        linhas.append(f"Erro no bloco de emendas: {e}")
+        print(f"Erro emendas: {e}")
+    return linhas
 
 
 if __name__ == "__main__":
