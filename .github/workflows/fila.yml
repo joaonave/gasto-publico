@@ -1,0 +1,41 @@
+name: Fila do Buffer (diagnóstico)
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/workflows/fila.yml"]
+permissions:
+  contents: write
+jobs:
+  fila:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install requests
+      - env: {BUFFER_KEY: "${{ secrets.BUFFER_KEY }}"}
+        run: |
+          mkdir -p dados/diag
+          python - <<'PY'
+          import json, requests, os
+          from robo import publicar
+          def raw(q):
+              r = requests.post(publicar.API, json={"query": q}, timeout=60,
+                                headers={"Authorization": f"Bearer {os.environ['BUFFER_KEY']}"})
+              return r.json()
+          out = []
+          for tipo in ("Query", "Mutation"):
+              d = raw('{ __type(name: "%s") { fields { name args { name type { name kind ofType { name } } } } } }' % tipo)
+              for f in (d.get("data") or {}).get("__type", {}).get("fields", []) or []:
+                  if "post" in f["name"].lower():
+                      out.append(f"{tipo}.{f['name']}({', '.join(a['name'] + ':' + str(a['type'].get('name') or (a['type'].get('ofType') or {}).get('name')) for a in f['args'])})")
+              if not d.get("data"): out.append(f"{tipo}: {json.dumps(d)[:500]}")
+          for nome in ("PostsInput", "PostsFiltersInput", "PostFilterInput", "DeletePostInput", "Post"):
+              d = raw('{ __type(name: "%s") { inputFields { name type { name kind ofType { name } } } fields { name } enumValues { name } } }' % nome)
+              out.append(f"{nome}: {json.dumps((d.get('data') or {}).get('__type'))[:1500]}")
+          open("dados/diag/buffer_schema.txt", "w").write("\n".join(out))
+          PY
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dados/diag && git commit -m "Diagnóstico da fila" && git pull --rebase -X theirs origin main && git push
