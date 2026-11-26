@@ -123,6 +123,12 @@ def escolher(candidatos, estado, hoje, pop):
         ja = usados.get(cat, 0) + sum(1 for e in escolhidos if categoria(e) == cat)
         if ja < LIMITE_DIA.get(cat, 2):
             escolhidos.append(f)
+    # volume: se os limites por categoria deixaram vaga no teto, completa com as maiores notas restantes
+    for f in sorted(candidatos, key=lambda f: (-f["nota"], -f["valor"])):
+        if estado["pub_qtd"] + len(escolhidos) >= TETO_DIA:
+            break
+        if f not in escolhidos and f["nota"] > 0:
+            escolhidos.append(f)
     # intercala categorias na ordem de publicação
     fila, restantes = [], list(escolhidos)
     while restantes:
