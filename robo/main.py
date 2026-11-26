@@ -43,8 +43,8 @@ def _normalizar_data(txt):
 def executar(data=None):
     data = (_normalizar_data(data or os.environ.get("DATA"))
             or (datetime.now(BRT) - timedelta(days=1)).strftime("%Y%m%d"))
-    publicar = os.environ.get("PUBLICAR", "false").lower() == "true"
-    print(f"Data: {data} | publicar: {publicar}")
+    ligar_publicacao = os.environ.get("PUBLICAR", "false").lower() == "true"
+    print(f"Data: {data} | publicar: {ligar_publicacao}")
 
     estado = _carregar_estado()
     contratos = pncp.contratos_do_dia(data)
@@ -66,7 +66,7 @@ def executar(data=None):
     linhas += _bloco_emendas(estado)
     linhas += _bloco_cota(estado)
 
-    if publicar and FILA:
+    if ligar_publicacao and FILA:
         FILA.sort(key=lambda x: x[0])
         # intercala categorias: o sort é estável, então mantém a ordem de valor dentro de cada uma
         resultados = publicar.agendar([t for _, t in FILA])
