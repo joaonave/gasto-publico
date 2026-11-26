@@ -28,6 +28,8 @@ COMENTARIO_A_CADA = 4
 
 # Máximo de posts por execução (o resto fica para o dia seguinte, por ordem de valor)
 MAX_POSTS_DIA = 5
+MAX_SHOWS_DIA = 3        # shows não podem dominar o feed
+MAX_OUTROS_PNCP_DIA = 3  # publicidade e compras inusitadas
 
 # PNCP
 PNCP_BASE = "https://pncp.gov.br/api/consulta/v1/contratos"

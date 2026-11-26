@@ -108,6 +108,27 @@ def checar(f, manchete, comentario):
     return erros
 
 
+COMENTARIOS = {
+    "show": ["Mas a festa vai ser boa.", "Prioridades.", "O povo pede posto de saúde, a prefeitura entrega palco.",
+             "Pão e circo. Só que sem o pão.", "Animação garantida. O resto a gente vê depois.",
+             "E ainda tem quem reclame do buraco na rua."],
+    "midia": ["Fazer é caro. Contar que fez, mais ainda.", "A propaganda é sempre ótima.",
+              "Se não aparecer, não aconteceu."],
+    "inusitada": ["Servidor público também tem paladar.", "Tudo pelo bem-estar da população.",
+                  "O cardápio do contribuinte é outro."],
+    "cota": ["Tudo dentro da regra. Esse é o problema.", "Reembolsado com carinho pelo contribuinte.",
+             "Mandato dá fome."],
+    "emenda": ["Coincidências da política.", "O mapa do voto explica muita coisa.", "Generosidade com o dinheiro dos outros."],
+}
+
+
+def _comentario_banco(f):
+    tipo = f.get("tipo", "show")
+    chave = next((k for k in COMENTARIOS if tipo.startswith(k)), "show")
+    lista = COMENTARIOS[chave]
+    return lista[sum(map(ord, str(f.get("id", "")))) % len(lista)]
+
+
 def montar(f, pedir_comentario):
     """Monta o post. Se o Grok falhar ou a checagem reprovar, usa a manchete padrão sem comentário."""
     manchete, comentario, origem = _manchete_padrao(f), "", "padrão"
@@ -123,8 +144,10 @@ def montar(f, pedir_comentario):
     except Exception as e:  # noqa: BLE001
         print(f"  Grok indisponível ({e}); usando manchete padrão")
 
+    if pedir_comentario and not comentario:
+        comentario = _comentario_banco(f)
     erros = checar(f, manchete, comentario)
-    embaixo = comentario if comentario else _linha_fato(f)
+    embaixo = f"{comentario}\n\n{_linha_fato(f)}" if comentario else _linha_fato(f)
     post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}"
     # X conta link como 23 caracteres
     tamanho = len(post) - len(f["link"]) + 23

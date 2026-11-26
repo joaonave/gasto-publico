@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import config, cota, emendas, pncp, posts_emendas, publicar, redacao, shows
+from . import config, cota, emendas, outros_pncp, pncp, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -48,12 +48,13 @@ def executar(data=None):
 
     estado = _carregar_estado()
     contratos = pncp.contratos_do_dia(data)
-    achados = [f for f in shows.selecionar(contratos) if f["id"] not in estado["vistos"]]
+    achados = [f for f in shows.selecionar(contratos) if f["id"] not in estado["vistos"]][: config.MAX_SHOWS_DIA]
+    achados += [f for f in outros_pncp.selecionar(contratos) if f["id"] not in estado["vistos"]][: config.MAX_OUTROS_PNCP_DIA]
     print(f"Shows acima do corte: {len(achados)}")
 
     linhas = [f"# Posts – {data[6:]}/{data[4:6]}/{data[:4]}",
               f"Contratos no PNCP: {len(contratos)} | shows acima do corte: {len(achados)}", ""]
-    for f in achados[: config.MAX_POSTS_DIA]:
+    for f in achados:
         estado["contador_posts"] += 1
         pedir = estado["contador_posts"] % config.COMENTARIO_A_CADA == 0
         post = redacao.montar(f, pedir)

@@ -44,6 +44,7 @@ def fatos(c):
     data = (c.get("dataAssinatura") or "")[:10]
     return {
         "id": c.get("numeroControlePNCP") or link_contrato(c),
+        "tipo": "show",
         "orgao": (c.get("orgaoEntidade") or {}).get("razaoSocial", ""),
         "municipio": municipio,
         "uf": uf,
