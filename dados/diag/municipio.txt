@@ -9,7 +9,4 @@ IDHM 0,566, baixo (PNUD, 2010)
 3106200
 {'idhm': 0.81, 'agua': 99.3, 'esgoto': 96.97, 'precario': 2.49}
 📊 BELO HORIZONTE (MG)
-Esgoto na rede geral: 97,0% dos moradores
-Água da rede geral: 99,3% dos moradores
-(IBGE, Censo 2022)
 IDHM 0,810, muito alto (PNUD, 2010)

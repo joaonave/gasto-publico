@@ -1,0 +1,36 @@
+== https://diaad.s3.sa-east-1.amazonaws.com/sim/Mortalidade_Geral_2023.csv
+HTTP/1.1 403 Forbidden
+Server: AmazonS3
+x-amz-request-id: GE32THKD0ZYEA0TJ
+x-amz-id-2: CdPHfxo0yLEcqV6VGAYQ80+/nloloqAkYNeUHhAkXxCFvgG6aejbvTSzGZ51KSABmGHiB46TL3EvPzB8ilTgnnLTmwrTWucb
+Content-Type: application/xml
+== https://diaad.s3.sa-east-1.amazonaws.com/sim/Mortalidade_Geral_2024.csv
+HTTP/1.1 403 Forbidden
+Server: AmazonS3
+x-amz-request-id: GE3468EZEDH5GSRC
+x-amz-id-2: /fPA28VdpSYH+QMQrCFy2ZrTXleio41+VZfwz7FOSRh2GUpLGThhMHdBxORkbwWyDThFhgGakQRGGqaU3Y5LKk1LwJVjItPf
+Content-Type: application/xml
+== https://diaad.s3.sa-east-1.amazonaws.com/sim/DO24OPEN.csv
+HTTP/1.1 403 Forbidden
+Server: AmazonS3
+x-amz-request-id: C26TNPCAGKWXJH47
+x-amz-id-2: 0nT0H2K/JxhgczTKXlkqQN5OygcXvjBNo5VWrnQBTYkuGkdNv8+WYnsROgyc2K89Is0qSmbf5JTkuD0UNY28Hmouc0odhDWt
+Content-Type: application/xml
+== ftp CID10/DORES
+01-31-20  02:51PM               892175 DOTO2017.dbc
+04-02-20  04:34PM               659326 DOTO2018.dbc
+04-06-21  12:55PM               703873 DOTO2019.dbc
+03-31-22  04:19PM               821151 DOTO2020.dbc
+04-28-23  11:56AM              1007775 DOTO2021.dbc
+12-21-23  04:20PM               827677 DOTO2022.dbc
+12-19-24  11:56AM               817587 DOTO2023.dbc
+12-23-25  03:48PM               874197 DOTO2024.dbc
+== ftp PRELIM/DORES
+08-28-26  01:41PM              4303881 DOSC2025.dbc
+09-28-26  11:53AM              2611771 DOSC2026.dbc
+08-28-26  01:41PM              1241597 DOSE2025.dbc
+09-28-26  11:53AM               764786 DOSE2026.dbc
+08-28-26  01:41PM             28337530 DOSP2025.dbc
+09-28-26  11:53AM             16330857 DOSP2026.dbc
+08-28-26  01:41PM               857563 DOTO2025.dbc
+09-28-26  11:53AM               493054 DOTO2026.dbc
