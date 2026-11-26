@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import config, cota, emendas, outros_pncp, pncp, posts_emendas, publicar, redacao, shows
+from . import config, cota, emendas, emendas_portal, outros_pncp, pncp, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -83,32 +83,31 @@ def executar(data=None):
 
 
 def _bloco_emendas(estado):
-    linhas = ["", "# Emendas Pix", ""]
+    linhas = ["", "# Emendas parlamentares (Portal da Transparência)", ""]
     try:
         cadastro = emendas.parlamentares()
         print(f"Parlamentares no cadastro: {len(cadastro)}")
-        todos = emendas.carregar_tudo(RAIZ / "dados" / "emendas")
-        ano = str(max(emendas.ANOS))
-        hoje = [p for p in todos if str(p["ano"]) == ano]
-        ids_ant = set(estado.get("pix_ids", []))
-        if not ids_ant:
-            linhas.append(f"Primeira execução: base criada com {len(hoje)} planos de {ano}. Novidades a partir de amanhã.")
+        todas = emendas_portal.baixar()
+        ano = datetime.now(BRT).year
+        pagos, primeira = emendas_portal.pagamentos_do_dia(todas, RAIZ / "dados" / "emendas_pago.json", ano)
+        if primeira:
+            linhas.append("Primeira execução: base de valores pagos criada. Pagamentos do dia a partir de amanhã.")
         else:
-            novos = [posts_emendas.fatos_emenda(p, cadastro) for p in emendas.novos_planos(hoje, ids_ant)]
-            novos.sort(key=lambda f: (f["tipo"] != "emenda_fora", -f["valor"]))
-            linhas.append(f"Planos novos hoje: {len(novos)}")
-            for f in novos[: config.MAX_POSTS_DIA]:
+            fatos = [f for f in (posts_emendas.fatos_pagamento(r, cadastro) for r in pagos) if f]
+            fatos.sort(key=lambda f: (f["tipo"] != "emenda_fora", -f["valor"]))
+            linhas.append(f"Pagamentos novos acima do corte: {len(pagos)} | com parlamentar identificado: {len(fatos)}")
+            for f in fatos[: emendas_portal.MAX_POSTS]:
                 estado["contador_posts"] += 1
                 post = redacao.montar(f, estado["contador_posts"] % config.COMENTARIO_A_CADA == 0)
                 _enfileirar(post, 1 if f["tipo"] == "emenda_fora" else 3)
                 status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
                 linhas += [f"## {status} ({f['tipo']})", "```", post["texto"], "```", ""]
-        estado["pix_ids"] = [p["id"] for p in hoje]
 
-        # Raio-X do dia (rodízio)
-        for _ in range(20):
+        # Raio-X do dia (rodízio), com valores pagos desde 2014
+        planos = emendas_portal.para_planos(todas)
+        for _ in range(30):
             nome = emendas.proximo_raio_x(estado, cadastro)
-            rx = emendas.raio_x(nome, todos, cadastro)
+            rx = emendas.raio_x(nome, planos, cadastro)
             if rx:
                 th = posts_emendas.thread_raio_x(rx)
                 status = "OK" if not th["erros"] else "BLOQUEADO: " + "; ".join(th["erros"])
