@@ -14,7 +14,8 @@ PALAVRAS_SHOW = [
 # Objetos que não são cachê de artista (falsos positivos)
 PALAVRAS_EXCLUIR = [r"patroc[ií]nio", r"boat show", r"auto show", r"show ?room", r"agro ?show",
                     r"restaura[çc]", r"\bobras?\b", r"reforma", r"constru[çc]", r"pavimenta",
-                    r"aquisi[çc][ãa]o de", r"material", r"equipamento", r"instrumentos? musica"]
+                    r"aquisi[çc][ãa]o de", r"material", r"equipamento", r"instrumentos? musica",
+                    r"credenciamento", r"registro de pre[çc]os", r"chamamento"]
 
 # Objetos que incluem estrutura (palco, som, etc.) não são cachê puro
 PALAVRAS_ESTRUTURA = [r"\bpalco", r"sonoriza", r"ilumina", r"\btenda", r"gerador", r"estrutura"]
