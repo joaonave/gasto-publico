@@ -58,6 +58,7 @@ jobs:
           BUFFER_KEY: ${{ secrets.BUFFER_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          python -m robo.fila || true   # remove da fila posts de versões antigas
           python -m robo.publicar_pendentes
           git add saida dados
           git diff --cached --quiet || git commit -m "Resultado da publicação"

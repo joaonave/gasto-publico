@@ -16,7 +16,8 @@ jobs:
       - env: {BUFFER_KEY: "${{ secrets.BUFFER_KEY }}"}
         run: |
           mkdir -p dados/diag
-          python -m robo.fila --listar > dados/diag/fila.txt 2>&1 || true
+          python -m robo.fila > dados/diag/fila.txt 2>&1 || true
+          python -m robo.fila --listar >> dados/diag/fila.txt 2>&1 || true
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
