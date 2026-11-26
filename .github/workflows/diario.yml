@@ -18,6 +18,13 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Bloquear re-run de código antigo
+        run: |
+          ATUAL=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$ATUAL" != "$GITHUB_SHA" ]; then
+            echo "::error::Esta execução é de um código antigo ($GITHUB_SHA). Use 'Run workflow', não 'Re-run'."
+            exit 1
+          fi
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
