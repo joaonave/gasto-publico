@@ -69,6 +69,8 @@ def baixar():
         "favorecido": _col(cab, "FAVORECIDO", evitar=("CODIGO", "TIPO", "UF", "MUNICIPIO")),
         "cod_favorecido": _col(cab, "CODIGO", "FAVORECIDO"),
         "empenhado": _col(cab, "VALOR", "EMPENHADO"),
+        "natureza": _col(cab, "NATUREZA"),
+        "tipo_favorecido": _col(cab, "TIPO", "FAVORECIDO"),
     }
     print(f"  mapeamento: {c}")
     linhas = []
