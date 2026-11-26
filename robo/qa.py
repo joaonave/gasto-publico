@@ -8,7 +8,7 @@ import requests
 from .shows import _num
 
 # Modo autônomo (ninguém revisando): só publica o que tem evidência forte.
-MODO_ESTRITO = True
+MODO_ESTRITO = False  # volume: só os erros grosseiros seguram o post
 
 _VALOR_NO_TEXTO = re.compile(r"R\$\s*([\d.]+,\d{2})")
 _TETO = re.compile(r"registro de pre[çc]os|estimad|valor m[áa]ximo|at[ée] o limite|teto|credenciamento|"
