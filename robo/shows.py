@@ -5,6 +5,7 @@ from . import config
 from .pncp import link_contrato
 
 _SHOW = re.compile("|".join(config.PALAVRAS_SHOW), re.IGNORECASE)
+_EXCLUIR = re.compile("|".join(config.PALAVRAS_EXCLUIR), re.IGNORECASE)
 _ESTRUTURA = re.compile("|".join(config.PALAVRAS_ESTRUTURA), re.IGNORECASE)
 
 
@@ -61,7 +62,7 @@ def selecionar(contratos):
     for c in contratos:
         objeto = c.get("objetoContrato") or ""
         v = _num(c.get("valorGlobal") or c.get("valorInicial"))
-        if v >= config.VALOR_MINIMO and _SHOW.search(objeto):
+        if v >= config.VALOR_MINIMO and _SHOW.search(objeto) and not _EXCLUIR.search(objeto):
             achados.append(fatos(c))
     achados.sort(key=lambda f: f["valor"], reverse=True)
     return achados

@@ -10,6 +10,9 @@ PALAVRAS_SHOW = [
     r"cantor[a]?\b",
     r"dupla sertaneja",
 ]
+# Objetos que não são cachê de artista (falsos positivos)
+PALAVRAS_EXCLUIR = [r"patroc[ií]nio", r"boat show", r"auto show", r"show ?room", r"agro ?show"]
+
 # Objetos que incluem estrutura (palco, som, etc.) não são cachê puro
 PALAVRAS_ESTRUTURA = [r"\bpalco", r"sonoriza", r"ilumina", r"\btenda", r"gerador", r"estrutura"]
 
