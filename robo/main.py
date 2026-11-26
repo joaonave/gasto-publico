@@ -34,8 +34,10 @@ def _normalizar_data(txt):
 
 def _candidatos_pncp(data, estado, log):
     contratos = pncp.contratos_do_dia(data)
-    c = [f for f in shows.selecionar(contratos) + outros_pncp.selecionar(contratos) if f["id"] not in estado["vistos"]]
-    log.append(f"PNCP {data}: {len(contratos)} contratos | candidatos (shows, publicidade, inusitadas): {len(c)}")
+    todos_shows = shows.selecionar(contratos)
+    com_artista = [f for f in todos_shows if f.get("artista")]  # show sem nome não engaja: fica fora
+    c = [f for f in com_artista + outros_pncp.selecionar(contratos) if f["id"] not in estado["vistos"]]
+    log.append(f"PNCP {data}: {len(contratos)} contratos | shows {len(todos_shows)} ({len(todos_shows) - len(com_artista)} sem artista, descartados) | candidatos: {len(c)}")
     return c
 
 
