@@ -33,7 +33,8 @@
   "00163055000112-2-000185/2026",
   "76950039000131-2-000101/2026",
   "01612832000121-2-000124/2026",
-  "06172720000110-2-000286/2026"
+  "06172720000110-2-000286/2026",
+  "raiox-Otto Alencar"
  ],
  "contador_posts": 27,
  "cota_ids": [
@@ -13722,11 +13723,16 @@
   "KENISTON BRAGA",
   "CRISTIANE LOPES"
  ],
- "pos_raio_x": 42,
+ "pos_raio_x": 43,
  "pub_dia": "2026-11-26",
- "pub_qtd": 0,
- "pub_cat": {},
+ "pub_qtd": 1,
+ "pub_cat": {
+  "raiox": 1
+ },
  "manchetes_dia": {
-  "2026-11-26": []
- }
+  "2026-11-26": [
+   "RAIO-X: SEN. OTTO ALENCAR (PSD-BA) TEVE R$ 367,06 MILHÕES PAGOS EM EMENDAS DESDE 2014"
+  ]
+ },
+ "raiox_dia": "2026-11-26"
 }
