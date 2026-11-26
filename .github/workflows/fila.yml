@@ -20,32 +20,20 @@ jobs:
           mkdir -p dados/diag
           T="${{ inputs.apagar }}"; [ -z "$T" ] && [ -f dados/apagar.txt ] && T="$(cat dados/apagar.txt)"; case "$T" in apagar:??????????*) python -m robo.fila --apagar "${T#apagar:}" > dados/diag/fila.txt 2>&1 || true;; esac
           python -m robo.fila --listar >> dados/diag/fila.txt 2>&1 || true
-          python - > dados/diag/df.txt 2>&1 <<'PY' || true
-          from collections import defaultdict
-          from robo import emendas, emendas_portal
-          L = emendas_portal.baixar()
-          cad = emendas.parlamentares()
-          def uf_aut(n): return cad.get(emendas.norm(n), {}).get("uf", "")
-          for alvo in ("FLAVIO BOLSONARO", "OTTO ALENCAR"):
-              g = defaultdict(float)
-              for r in L:
-                  if emendas.norm(r["autor"]) == alvo and r["uf"] == "DF":
-                      g[(r["favorecido"], r["natureza"], r["tipo_favorecido"], r["tipo"], r["ano"])] += r["pago"] or 0
-              print("==", alvo)
-              for k, v in sorted(g.items(), key=lambda kv: -kv[1])[:15]: print(f"  {v/1e6:8.2f} mi | {' | '.join(k)}")
-          # quem mais manda para favorecidos no DF (parlamentares de fora do DF)
-          tot, df = defaultdict(float), defaultdict(float)
-          nat = defaultdict(float)
-          for r in L:
-              a = emendas.norm(r["autor"]); v = r["pago"] or 0
-              tot[a] += v
-              if r["uf"] == "DF" and uf_aut(r["autor"]) not in ("DF", ""):
-                  df[a] += v; nat[(r["natureza"], r["tipo_favorecido"])] += v
-          print("== ranking para o DF (autor de fora do DF)")
-          for a, v in sorted(df.items(), key=lambda kv: -kv[1])[:20]:
-              print(f"  {v/1e6:8.2f} mi ({100*v/tot[a]:.0f}% do total) | {a} {uf_aut(a)}")
-          print("== natureza dos favorecidos no DF")
-          for k, v in sorted(nat.items(), key=lambda kv: -kv[1])[:12]: print(f"  {v/1e6:9.2f} mi | {k}")
+          python - > dados/diag/metricas.txt 2>&1 <<'PY' || true
+          import json
+          from robo import publicar
+          def tipo(n):
+              return publicar._gql('{ __type(name: "%s") { fields { name type { name kind ofType { name kind ofType { name } } } } } }' % n)["__type"]
+          post = tipo("Post")
+          print("Post:", [f["name"] for f in post["fields"]])
+          for f in post["fields"]:
+              if any(k in f["name"].lower() for k in ("metric", "stat", "insight", "analytic", "engag")):
+                  t = f["type"]; nome = t.get("name") or (t.get("ofType") or {}).get("name") or ((t.get("ofType") or {}).get("ofType") or {}).get("name")
+                  print("campo", f["name"], "->", nome)
+                  if nome:
+                      sub = tipo(nome)
+                      print("  ", nome, [x["name"] for x in (sub or {}).get("fields") or []])
           PY
           python -c "from pathlib import Path; from robo import municipio as m; M=m.Municipios(Path('/tmp/x.json')); [print(c, M.dados(c), m.comentario({'municipio':n,'uf':u}, M.dados(c)), sep='\n') for c,n,u in (('2110302','Santo Antônio dos Lopes','MA'),('3106200','Belo Horizonte','MG'))]" > dados/diag/municipio.txt 2>&1 || true
       - run: |
