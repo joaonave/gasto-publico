@@ -159,17 +159,19 @@ def _variante(f):
     return VARIANTES_TAG[sum(map(ord, str(f.get("id", "")))) % len(VARIANTES_TAG)]
 
 
+TAGS_FIXAS = "#GastoPublico #emendas #congresso #imposto"
+
+
 def _hashtags(f):
-    """Busca no X: cidade + UF + tema. Sem acento e sem espaço; nunca hashtag de trending."""
+    """Fixas do canal + locais (cidade, estado, artista). Nunca hashtag de trending."""
+    return (TAGS_FIXAS + " " + _hashtags_locais(f)).strip()
+
+
+def _hashtags_locais(f):
     import unicodedata
     def limpa(t):
         t = unicodedata.normalize("NFKD", t or "").encode("ascii", "ignore").decode()
         return "".join(p.capitalize() for p in re.split(r"[^A-Za-z0-9]+", t) if p)
-    v = _variante(f)
-    if v == "sem":
-        return ""
-    if v == "politica":
-        return "#política #DinheiroPúblico"
     tags = []
     if f.get("municipio"):
         tags.append("#" + limpa(f["municipio"]))
@@ -179,7 +181,7 @@ def _hashtags(f):
         tags.append("#" + limpa(f["artista"]))
     tipo = f.get("tipo", "show")
     tag = next((v for k, v in TAG_TIPO.items() if tipo.startswith(k)), None)
-    if tag:
+    if tag and tag.lower() not in TAGS_FIXAS.lower():
         tags.append(tag)
     return " ".join(dict.fromkeys(t for t in tags if len(t) > 1))
 
@@ -204,7 +206,9 @@ def montar(f, pedir_comentario):
     erros = checar(f, manchete, comentario)
     embaixo = f"{f['linha_fato']}\n\n{comentario}" if f.get("tipo") == "raiox" and f.get("linha_fato") else comentario
     post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{_hashtags(f)}".rstrip()
-    if len(post) - len(f["link"]) + 23 > 280:  # sem espaço: tira as hashtags, nunca o fato
+    if len(post) - len(f["link"]) + 23 > 280:  # sem espaço: fica só com as fixas
+        post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{TAGS_FIXAS}"
+    if len(post) - len(f["link"]) + 23 > 280:  # ainda sem espaço: nunca corta o fato
         post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}"
     # X conta link como 23 caracteres
     tamanho = len(post) - len(f["link"]) + 23
