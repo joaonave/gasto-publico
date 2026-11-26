@@ -1,6 +1,9 @@
 name: Robô diário – gasto público
 
 on:
+  push:
+    branches: [main]
+    paths: ["robo/**", "requirements.txt", ".github/workflows/**"]   # código novo roda sozinho
   schedule:
     - cron: "7 10 * * *"   # 07:07 em Brasília
   workflow_dispatch:
@@ -11,6 +14,10 @@ on:
 
 permissions:
   contents: write
+
+concurrency:
+  group: robo
+  cancel-in-progress: false
 
 jobs:
   rodar:
@@ -43,5 +50,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add saida dados
           git diff --cached --quiet || git commit -m "Posts do dia"
-          git pull --rebase origin main
+          git pull --rebase -X theirs origin main
           git push
