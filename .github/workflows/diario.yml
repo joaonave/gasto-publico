@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: robo
@@ -55,6 +56,7 @@ jobs:
       - name: Publicar no Buffer (com cards)
         env:
           BUFFER_KEY: ${{ secrets.BUFFER_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python -m robo.publicar_pendentes
           git add saida dados

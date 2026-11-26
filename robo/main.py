@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import card, cota, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
+from . import card, cota, qa, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -99,7 +99,18 @@ def executar(data=None):
     log += ["", f"Candidatos: {len(candidatos)} | escolhidos pelo sistema de pontos: {len(escolhidos)} "
                 f"(já publicados hoje: {estado.get('pub_qtd', 0)})", ""]
 
-    aprovados = []
+    aprovados, segurados, manchetes = [], [], set(estado.get("manchetes_dia", {}).get(hoje, []))
+    for f in list(escolhidos):
+        motivos = qa.revisar(f, manchetes)
+        if motivos:
+            segurados.append((f, motivos))
+            escolhidos.remove(f)
+            continue
+        manchetes.add(f.get("manchete_padrao") or "")
+    estado["manchetes_dia"] = {hoje: sorted(manchetes)}
+    if segurados:
+        log += ["## Segurados pelo QA (não publicados)"] + [
+            f"- {f.get('manchete_padrao') or f.get('orgao')} → {'; '.join(m)}" for f, m in segurados] + [""]
     for f in escolhidos:
         post = redacao.montar(f, True)
         status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
