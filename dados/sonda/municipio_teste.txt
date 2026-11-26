@@ -1,0 +1,23 @@
+2110302 {'idhm': 0.566, 'agua': 78.38, 'esgoto': 12.66}
+📊 SANTO ANTÔNIO DOS LOPES (MA)
+População: 14.632 (IBGE)
+IDHM 0,566, baixo (PNUD, 2010)
+Água da rede geral: 78,4% dos moradores
+Esgoto na rede geral: 12,7% dos moradores
+(IBGE, Censo 2022)
+
+3106200 {'idhm': 0.81, 'agua': 99.3, 'esgoto': 96.97}
+📊 BELO HORIZONTE (MG)
+População: 2.415.451 (IBGE)
+IDHM 0,810, muito alto (PNUD, 2010)
+Água da rede geral: 99,3% dos moradores
+Esgoto na rede geral: 97,0% dos moradores
+(IBGE, Censo 2022)
+
+2408102 {'idhm': 0.763, 'agua': 98.38, 'esgoto': 43.74}
+📊 NATAL (RN)
+População: 783.196 (IBGE)
+IDHM 0,763, alto (PNUD, 2010)
+Água da rede geral: 98,4% dos moradores
+Esgoto na rede geral: 43,7% dos moradores
+(IBGE, Censo 2022)
