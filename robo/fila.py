@@ -27,6 +27,19 @@ def listar():
     return posts
 
 
+def metricas():
+    """Posts enviados com as métricas que o Buffer coleta do X."""
+    canal = publicar.canal_x()
+    orgs = publicar._gql("query { account { organizations { id } } }")["account"]["organizations"]
+    out = []
+    for org in orgs:
+        q = ('query { posts(first: 100, input: { organizationId: %s, filter: { channelIds: [%s] } }) '
+             '{ edges { node { id status sentAt text externalLink metricsUpdatedAt metrics { name value unit } } } } }'
+             % (json.dumps(org["id"]), json.dumps(canal["id"])))
+        out += [e["node"] for e in publicar._gql(q)["posts"]["edges"] if e["node"]["status"] == "sent"]
+    return out
+
+
 def pendente(p):
     return str(p.get("status", "")).lower() in ("scheduled", "draft", "needs_approval", "queued", "pending")
 
@@ -59,6 +72,8 @@ def apagar_com(trecho):
 if __name__ == "__main__":
     if "--apagar" in sys.argv:
         apagar_com(sys.argv[sys.argv.index("--apagar") + 1])
+    elif "--metricas" in sys.argv:
+        print(json.dumps(metricas(), ensure_ascii=False))
     elif "--listar" in sys.argv:
         for p in listar():
             print(p["status"], p["dueAt"], p["createdAt"], "ANTIGO" if antigo(p) else "", repr((p["text"] or "")[:90]))

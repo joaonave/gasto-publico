@@ -1,9 +1,0 @@
-Post: ['id', 'allowedActions', 'assets', 'author', 'channel', 'channelId', 'channelService', 'contentItemId', 'dueAt', 'error', 'externalLink', 'ideaId', 'isCustomScheduled', 'metadata', 'metrics', 'metricsUpdatedAt', 'notificationStatus', 'schedulingType', 'sentAt', 'sharedNow', 'shareMode', 'status', 'tags', 'text', 'via', 'createdAt', 'updatedAt']
-campo metrics -> PostMetric
-   PostMetric ['description', 'name', 'type', 'unit', 'value']
-campo metricsUpdatedAt -> DateTime
-   DateTime []
-campo notificationStatus -> NotificationStatus
-   NotificationStatus []
-campo status -> PostStatus
-   PostStatus []
