@@ -67,11 +67,14 @@ class Populacao:
             nomes[f"{_n(m['nome'])}|{uf}"] = str(m["id"])
         return {"por_cod": pop, "por_nome": nomes}
 
-    def de(self, f):
+    def cod(self, f):
         cod = str(f.get("cod_ibge") or "")[:7]
         if not cod and f.get("municipio") and f.get("uf"):
             cod = self.por_nome.get(f"{_n(f['municipio'])}|{f['uf']}", "")
-        return self.por_cod.get(cod)
+        return cod
+
+    def de(self, f):
+        return self.por_cod.get(self.cod(f))
 
 
 def nota(f, pop):

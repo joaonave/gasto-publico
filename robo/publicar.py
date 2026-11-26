@@ -76,8 +76,13 @@ def agendar(posts):
     for post, quando in zip(posts, horarios(len(posts))):
         due = quando.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
         tentativas = []
+        dados = post.get("dados_municipio") or ""
         if post.get("variante_link") == "resposta":
-            p2 = dict(post, texto_final=post["corpo_sem_link"], resposta=f"Fonte oficial:\n{post['link']}")
+            resp = (dados + "\n\n" if dados else "") + f"Fonte oficial:\n{post['link']}"
+            p2 = dict(post, texto_final=post["corpo_sem_link"], resposta=resp)
+            tentativas += [(p2, True, True), (p2, False, True)]
+        elif dados:
+            p2 = dict(post, texto_final=post["texto"], resposta=dados)
             tentativas += [(p2, True, True), (p2, False, True)]
         p1 = dict(post, texto_final=post["texto"], resposta=None)
         tentativas += [(p1, True, False), (p1, False, False)]
@@ -89,7 +94,8 @@ def agendar(posts):
                 r = {"message": str(e)[:200]}
             if "post" in r:
                 res = (f"agendado {quando:%d/%m %H:%M} | imagem: {'sim' if img and p.get('card') else 'não'}"
-                       f" | link: {'resposta' if th else 'post'}")
+                       f" | link: {'resposta' if th and post.get('variante_link') == 'resposta' else 'post'}"
+                       f" | 1º comentário: {'sim' if th else 'não'}")
                 break
             res = f"erro: {r.get('message')}"
             if "limit" in res.lower():

@@ -2,7 +2,7 @@ name: Sonda de fontes
 on:
   workflow_dispatch:
   push:
-    paths: [".github/workflows/sonda.yml"]
+    paths: [".github/workflows/sonda.yml", "robo/municipio.py"]
 permissions:
   contents: write
 jobs:
@@ -17,15 +17,17 @@ jobs:
         run: |
           mkdir -p dados/sonda
           python - <<'PY'
-          import json, requests
-          B = "https://servicodados.ibge.gov.br/api"
-          def salvar(nome, url):
-              r = requests.get(url, timeout=120)
-              open(f"dados/sonda/{nome}", "w").write(f"status {r.status_code}\n" + r.text[:60000])
-          salvar("7555_meta.json", f"{B}/v3/agregados/7555/metadados")
-          for pq in (37, 10111):
-              salvar(f"pq{pq}_ind.json", f"{B}/v1/pesquisas/{pq}/indicadores")
-              salvar(f"pq{pq}_bh.json", f"{B}/v1/pesquisas/{pq}/resultados/3106200")
+          from pathlib import Path
+          from robo import municipio, pontos
+          pop = pontos.Populacao(Path("dados/populacao.json"))
+          m = municipio.Municipios(Path("/tmp/m.json"))
+          out = []
+          for nome, uf in (("Santo Antônio dos Lopes", "MA"), ("Belo Horizonte", "MG"), ("Natal", "RN")):
+              f = {"municipio": nome, "uf": uf}
+              cod = pop.cod(f)
+              d = m.dados(cod)
+              out.append(f"{cod} {d}\n{municipio.comentario(f, d, pop.por_cod.get(cod))}\n")
+          open("dados/sonda/municipio_teste.txt", "w").write("\n".join(out))
           PY
       - run: |
           git config user.name "github-actions[bot]"

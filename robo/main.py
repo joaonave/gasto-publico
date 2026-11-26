@@ -1,10 +1,11 @@
 """Execução diária: coleta → candidatos → sistema de pontos → redação → checagem → Buffer."""
 import json
+import re
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import card, cota, qa, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
+from . import card, cota, municipio, qa, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -97,6 +98,7 @@ def executar(data=None):
             print(f"Erro {nome}: {e}")
 
     pop = pontos.Populacao(RAIZ / "dados" / "populacao.json")
+    muni = municipio.Municipios(RAIZ / "dados" / "municipios.json")
     escolhidos = pontos.escolher(candidatos, estado, hoje, pop)
     log += ["", f"Candidatos: {len(candidatos)} | escolhidos pelo sistema de pontos: {len(escolhidos)} "
                 f"(já publicados hoje: {estado.get('pub_qtd', 0)})", ""]
@@ -115,10 +117,15 @@ def executar(data=None):
             f"- {f.get('manchete_padrao') or f.get('orgao')} → {'; '.join(m)}" for f, m in segurados] + [""]
     for f in escolhidos:
         post = redacao.montar(f, True)
+        # dados da cidade só quando o post é sobre a cidade: órgão municipal (PNCP) ou destino de emenda
+        local = str(f.get("tipo", "")).startswith("emenda") or re.search(r"munic|prefeit", f.get("orgao") or "", re.IGNORECASE)
+        cod = pop.cod(f) if local else ""
+        post["dados_municipio"] = municipio.comentario(f, muni.dados(cod), pop.por_cod.get(cod)) if cod else ""
         status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
         hab = f" | R$/hab {f['por_habitante']:.2f}" if f.get("por_habitante") else ""
         log += [f"## {status} | {f.get('tipo')} | nota {f['nota']}{hab} | tags {post['variante_tag']}",
-                "```", post["texto"], "```", f"Objeto: {f.get('objeto', '')[:300]}", ""]
+                "```", post["texto"] + (f"\n--- 1º comentário ---\n{post['dados_municipio']}" if post["dados_municipio"] else ""),
+                "```", f"Objeto: {f.get('objeto', '')[:300]}", ""]
         ia = qa.revisar_ia(f, post["texto"]) if not post["erros"] else []
         if ia:
             log.append(f"Segurado pela IA: {'; '.join(ia)}")
@@ -131,6 +138,8 @@ def executar(data=None):
                 print(f"  card falhou: {e}")
                 nome_card = ""
             aprovados.append((f, dict(post, card=nome_card)))
+
+    muni.salvar()
 
     # o que não foi escolhido fica registrado, com a nota
     resto = [f for f in candidatos if f not in escolhidos]
