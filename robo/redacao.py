@@ -189,6 +189,30 @@ def _hashtags_locais(f):
     return " ".join(dict.fromkeys(t for t in tags if len(t) > 1))
 
 
+# ironia com a conta por morador (valor do contrato ÷ população IBGE)
+INGRESSO = {
+    "show": ["Dá {v} por morador. Até quem ficou em casa pagou o ingresso.",
+             "Saiu {v} o \"ingresso\" de cada morador. Criança e idoso inclusos.",
+             "{v} por habitante. Ingresso caro pra quem nem foi.",
+             "Cada morador pagou {v} pelo show. Foi convidado?"],
+    "midia": ["Até {v} por morador em propaganda. Você foi bem informado?",
+              "Até {v} de cada morador pra prefeitura falar bem dela mesma."],
+    "inusitada": ["{v} de cada morador. Você foi convidado?"],
+}
+MIN_POR_HAB = {"show": 5, "midia": 10, "inusitada": 1}
+
+
+def _ingresso(f):
+    tipo, ph = f.get("tipo"), f.get("por_habitante")
+    if tipo not in INGRESSO or not ph or ph < MIN_POR_HAB[tipo]:
+        return ""
+    if not re.search(r"munic|prefeit", f.get("orgao") or "", re.IGNORECASE):
+        return ""  # órgão estadual/federal: dividir pela população da cidade não faz sentido
+    v = f"R$ {ph:,.0f}".replace(",", ".") if ph >= 10 else f"R$ {ph:.2f}".replace(".", ",")
+    banco = INGRESSO[tipo]
+    return banco[sum(map(ord, f.get("id", ""))) % len(banco)].format(v=v)
+
+
 def montar(f, pedir_comentario):
     """Monta o post. Se o Grok falhar ou a checagem reprovar, usa a manchete padrão sem comentário."""
     manchete, comentario, origem = _manchete_padrao(f), "", "padrão"
@@ -204,9 +228,14 @@ def montar(f, pedir_comentario):
     except Exception as e:  # noqa: BLE001
         print(f"  Grok indisponível ({e}); usando manchete padrão")
 
+    ingresso = _ingresso(f)
+    if ingresso and origem == "padrão":
+        comentario = ingresso
     if not comentario:
         comentario = _comentario_banco(f)
-    erros = checar(f, manchete, comentario)
+    # o valor por morador é conta do próprio dado: fora da checagem de números
+    erros = checar(f, manchete, comentario.replace(re.search(r"R\$ [\d.,]+", comentario).group(0), "")
+                   if comentario == ingresso else comentario)
     embaixo = f"{f['linha_fato']}\n\n{comentario}" if f.get("tipo") == "raiox" and f.get("linha_fato") else comentario
     post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{_hashtags(f)}".rstrip()
     if len(post) - len(f["link"]) + 23 > 280:  # sem espaço: fica só com as fixas
