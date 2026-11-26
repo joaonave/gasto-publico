@@ -2,7 +2,7 @@ name: Fila do Buffer (diagnóstico)
 on:
   workflow_dispatch:
   push:
-    paths: [".github/workflows/fila.yml"]
+    paths: [".github/workflows/fila.yml", "robo/fila.py"]
 permissions:
   contents: write
 jobs:
@@ -16,25 +16,7 @@ jobs:
       - env: {BUFFER_KEY: "${{ secrets.BUFFER_KEY }}"}
         run: |
           mkdir -p dados/diag
-          python - <<'PY'
-          import json, requests, os
-          from robo import publicar
-          def raw(q):
-              r = requests.post(publicar.API, json={"query": q}, timeout=60,
-                                headers={"Authorization": f"Bearer {os.environ['BUFFER_KEY']}"})
-              return r.json()
-          out = []
-          for tipo in ("Query", "Mutation"):
-              d = raw('{ __type(name: "%s") { fields { name args { name type { name kind ofType { name } } } } } }' % tipo)
-              for f in (d.get("data") or {}).get("__type", {}).get("fields", []) or []:
-                  if "post" in f["name"].lower():
-                      out.append(f"{tipo}.{f['name']}({', '.join(a['name'] + ':' + str(a['type'].get('name') or (a['type'].get('ofType') or {}).get('name')) for a in f['args'])})")
-              if not d.get("data"): out.append(f"{tipo}: {json.dumps(d)[:500]}")
-          for nome in ("PostsInput", "PostsFiltersInput", "PostFilterInput", "DeletePostInput", "Post"):
-              d = raw('{ __type(name: "%s") { inputFields { name type { name kind ofType { name } } } fields { name } enumValues { name } } }' % nome)
-              out.append(f"{nome}: {json.dumps((d.get('data') or {}).get('__type'))[:1500]}")
-          open("dados/diag/buffer_schema.txt", "w").write("\n".join(out))
-          PY
+          python -m robo.fila --listar > dados/diag/fila.txt 2>&1 || true
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
