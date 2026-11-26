@@ -41,10 +41,32 @@ def _local(c):
 _ASPAS = re.compile(r'[“"«]([^”"»]{3,60})[”"»]')
 
 
-def artista(objeto):
-    """Nome do artista só quando o próprio contrato o escreve entre aspas."""
+_GENERICOS = re.compile(r"\b(LTDA|ME|EPP|EIRELI|S/?A|PRODU[CÇ][OÕ]ES|PRODU[CÇ][AÃ]O|ARTISTIC[AO]S?|ART[IÍ]STIC[AO]S?|"
+                        r"MUSICA[LIS]*|EVENTOS?|SHOWS?|EDITORA|ADMINISTRADORA|PROMO[CÇ][OÕ]ES|ENTRETENIMENTO|"
+                        r"EMPREENDIMENTOS|COMUNICA[CÇ][AÃ]O|SERVI[CÇ]OS|AGENCIA|AG[EÊ]NCIA|PRODUTORA|GRAVADORA|"
+                        r"ART[IÍ]ST|[0-9.\-/]+)\b", re.IGNORECASE)
+_CONECTORES = {"OS", "AS", "O", "A", "E", "DE", "DO", "DA", "DOS", "DAS", "&"}
+
+
+def _sem_acento(t):
+    import unicodedata
+    return unicodedata.normalize("NFKD", t or "").encode("ascii", "ignore").decode().upper()
+
+
+def artista(objeto, fornecedor=""):
+    """Nome do artista: entre aspas no contrato; ou o nome próprio do fornecedor, se ele aparece no objeto."""
     m = _ASPAS.search(objeto or "")
-    return m.group(1).strip() if m else ""
+    if m:
+        return m.group(1).strip()
+    palavras = _GENERICOS.sub(" ", fornecedor or "").split()
+    while palavras and palavras[0].upper() in _CONECTORES:
+        palavras.pop(0)
+    while palavras and palavras[-1].upper() in _CONECTORES:
+        palavras.pop()
+    nucleo = " ".join(palavras)
+    if len(nucleo) >= 4 and _sem_acento(nucleo) in _sem_acento(objeto):
+        return nucleo.title()
+    return ""
 
 
 def fatos(c):
@@ -66,7 +88,7 @@ def fatos(c):
         "data_assinatura": "/".join(reversed(data.split("-"))) if data else "",
         "link": link_contrato(c),
         "inclui_estrutura": bool(_ESTRUTURA.search(c.get("objetoContrato") or "")),
-        "artista": artista(c.get("objetoContrato")),
+        "artista": artista(c.get("objetoContrato"), c.get("nomeRazaoSocialFornecedor")),
     }
 
 

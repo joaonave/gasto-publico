@@ -94,6 +94,13 @@ def nota(f, pop):
         pontos += 1
     if f.get("qtd_contratos", 1) > 1:
         pontos += 1
+    # público: artista identificado dá busca e engajamento; MC (funk) mais ainda
+    if f.get("artista"):
+        pontos += 2
+        if re.search(r"\bMC\b", f["artista"], re.IGNORECASE):
+            pontos += 2
+    elif categoria(f) == "show" and re.search(r"\bMC\b", f.get("fornecedor", ""), re.IGNORECASE):
+        pontos += 3
     f["nota"] = pontos
     return pontos
 
