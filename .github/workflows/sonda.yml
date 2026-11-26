@@ -12,31 +12,24 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
-      - run: pip install requests openpyxl
+      - run: pip install requests
       - name: Sondar IBGE 6909 e IDHM PNUD
         run: |
           mkdir -p dados/sonda
           python - <<'PY'
-          import json, requests, openpyxl, io
-          out = {}
-          m = requests.get("https://servicodados.ibge.gov.br/api/v3/agregados/6909/metadados", timeout=60).json()
-          json.dump(m, open("dados/sonda/6909_meta.json","w"), ensure_ascii=False, indent=1)
-          cls = "/".join(f"c{c['id']}/all" for c in m.get("classificacoes", []))
-          url = f"https://apisidra.ibge.gov.br/values/t/6909/n6/3106200/v/all/p/all/{cls}"
-          r = requests.get(url, timeout=120)
-          open("dados/sonda/6909_bh.json","w").write(r.text[:200000])
-          x = requests.get("https://www.undp.org/sites/g/files/zskgke326/files/2023-07/base_de_dados.xlsx", timeout=120)
-          linhas = [f"status {x.status_code} bytes {len(x.content)}"]
-          try:
-              wb = openpyxl.load_workbook(io.BytesIO(x.content), read_only=True)
-              for ws in wb.worksheets:
-                  linhas.append(f"== {ws.title} dims {ws.max_row}x{ws.max_column}")
-                  for i, row in enumerate(ws.iter_rows(values_only=True)):
-                      linhas.append(repr(row[:40]))
-                      if i >= 6: break
-          except Exception as e:
-              linhas.append(f"erro {e}")
-          open("dados/sonda/idhm.txt","w").write("\n".join(linhas))
+          import json, requests
+          ag = requests.get("https://servicodados.ibge.gov.br/api/v3/agregados", timeout=120).json()
+          l = []
+          for pq in ag:
+              for t in pq.get("agregados", []):
+                  n = t["nome"].lower()
+                  if "esgot" in n or "desenvolvimento humano" in n:
+                      l.append(f'{pq["id"]} | {pq["nome"]} | {t["id"]} | {t["nome"]}')
+          open("dados/sonda/agregados.txt","w").write("\n".join(l))
+          r = requests.get("https://servicodados.ibge.gov.br/api/v1/pesquisas", timeout=120)
+          ps = r.json() if r.ok else []
+          out = [f'{p.get("id")} | {p.get("nome")}' for p in ps]
+          open("dados/sonda/pesquisas.txt","w").write(f"status {r.status_code}\n" + "\n".join(out))
           PY
       - run: |
           git config user.name "github-actions[bot]"
