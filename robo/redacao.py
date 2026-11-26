@@ -129,6 +129,26 @@ def _comentario_banco(f):
     return lista[sum(map(ord, str(f.get("id", "")))) % len(lista)]
 
 
+TAG_TIPO = {"show": "#Shows", "midia": "#Publicidade", "inusitada": "#DinheiroPublico",
+            "cota": "#CotaParlamentar", "emenda": "#EmendaPix"}
+
+
+def _hashtags(f):
+    """Busca no X: cidade + UF + tema. Sem acento e sem espaço; nunca hashtag de trending."""
+    import unicodedata
+    def limpa(t):
+        t = unicodedata.normalize("NFKD", t or "").encode("ascii", "ignore").decode()
+        return "".join(p.capitalize() for p in re.split(r"[^A-Za-z0-9]+", t) if p)
+    tags = []
+    if f.get("municipio"):
+        tags.append("#" + limpa(f["municipio"]))
+    if f.get("uf"):
+        tags.append("#" + f["uf"].upper())
+    tipo = f.get("tipo", "show")
+    tags.append(next((v for k, v in TAG_TIPO.items() if tipo.startswith(k)), "#DinheiroPublico"))
+    return " ".join(dict.fromkeys(t for t in tags if len(t) > 1))
+
+
 def montar(f, pedir_comentario):
     """Monta o post. Se o Grok falhar ou a checagem reprovar, usa a manchete padrão sem comentário."""
     manchete, comentario, origem = _manchete_padrao(f), "", "padrão"
@@ -148,7 +168,9 @@ def montar(f, pedir_comentario):
         comentario = _comentario_banco(f)
     erros = checar(f, manchete, comentario)
     embaixo = f"{comentario}\n\n{_linha_fato(f)}" if comentario else _linha_fato(f)
-    post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}"
+    post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{_hashtags(f)}"
+    if len(post) - len(f["link"]) + 23 > 280:  # sem espaço: tira as hashtags, nunca o fato
+        post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}"
     # X conta link como 23 caracteres
     tamanho = len(post) - len(f["link"]) + 23
     if tamanho > 280:
