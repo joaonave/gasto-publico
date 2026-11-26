@@ -1,0 +1,22 @@
+Query.dailyPostingLimits(input:DailyPostingLimitsInput)
+Query.aggregatedPostMetrics(input:AggregatedPostMetricsInput)
+Query.post(input:PostInput)
+Query.posts(after:String, first:Int, input:PostsInput)
+Query.postTemplate(input:PostTemplateInput)
+Query.postTemplates(after:String, first:Int, input:PostTemplatesInput)
+Mutation.createPost(input:CreatePostInput)
+Mutation.deletePost(input:DeletePostInput)
+Mutation.editPost(input:EditPostInput)
+Mutation.movePostInQueue(input:MovePostInQueueInput)
+Mutation.publishPostNow(input:PublishPostNowInput)
+Mutation.addPostToContentItem(input:AddPostToContentItemInput)
+Mutation.promoteContentItemDraftToPosts(input:PromoteContentItemDraftToPostsInput)
+Mutation.removePostFromContentItem(input:RemovePostFromContentItemInput)
+Mutation.createPostTemplate(input:CreatePostTemplateInput)
+Mutation.deletePostTemplate(input:DeletePostTemplateInput)
+Mutation.updatePostTemplate(input:UpdatePostTemplateInput)
+PostsInput: {"inputFields": [{"name": "filter", "type": {"name": "PostsFiltersInput", "kind": "INPUT_OBJECT", "ofType": null}}, {"name": "organizationId", "type": {"name": null, "kind": "NON_NULL", "ofType": {"name": "OrganizationId"}}}, {"name": "sort", "type": {"name": null, "kind": "LIST", "ofType": {"name": null}}}], "fields": null, "enumValues": null}
+PostsFiltersInput: {"inputFields": [{"name": "channelIds", "type": {"name": null, "kind": "LIST", "ofType": {"name": null}}}, {"name": "dueAt", "type": {"name": "DateTimeComparator", "kind": "INPUT_OBJECT", "ofType": null}}, {"name": "dueAtPresence", "type": {"name": "DateTimePresence", "kind": "ENUM", "ofType": null}}, {"name": "postTypes", "type": {"name": null, "kind": "LIST", "ofType": {"name": null}}}, {"name": "status", "type": {"name": null, "kind": "LIST", "ofType": {"name": null}}}, {"name": "tags", "type": {"name": "TagComparator", "kind": "INPUT_OBJECT", "ofType": null}}, {"name": "createdAt", "type": {"name": "DateTimeComparator", "kind": "INPUT_OBJECT", "ofType": null}}], "fields": null, "enumValues": null}
+PostFilterInput: null
+DeletePostInput: {"inputFields": [{"name": "id", "type": {"name": null, "kind": "NON_NULL", "ofType": {"name": "PostId"}}}], "fields": null, "enumValues": null}
+Post: {"inputFields": null, "fields": [{"name": "id"}, {"name": "allowedActions"}, {"name": "assets"}, {"name": "author"}, {"name": "channel"}, {"name": "channelId"}, {"name": "channelService"}, {"name": "contentItemId"}, {"name": "dueAt"}, {"name": "error"}, {"name": "externalLink"}, {"name": "ideaId"}, {"name": "isCustomScheduled"}, {"name": "metadata"}, {"name": "metrics"}, {"name": "metricsUpdatedAt"}, {"name": "notificationStatus"}, {"name": "schedulingType"}, {"name": "sentAt"}, {"name": "sharedNow"}, {"name": "shareMode"}, {"name": "status"}, {"name": "tags"}, {"name": "text"}, {"name": "via"}, {"name": "createdAt"}, {"name": "updatedAt"}], "enumValues": null}
