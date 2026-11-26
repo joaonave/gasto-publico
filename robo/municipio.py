@@ -14,6 +14,8 @@ IDHM_IND = 329756
 # % dos moradores (variável 1000382), total de idade (c58/95253) e cor (c86/95251)
 AGUA = "/t/6909/n6/{cod}/v/1000382/p/2022/c301/31471/c1817/72125/c58/95253/c86/95251"  # rede geral de distribuição
 ESGOTO = "/t/7555/n6/{cod}/v/1000382/p/2022/c11558/46290/c58/95253/c86/95251"           # rede geral, pluvial ou fossa ligada à rede
+# fossa rudimentar ou buraco, vala, rio/lago/córrego/mar, sem banheiro nem sanitário
+PRECARIO = "/t/7555/n6/{cod}/v/1000382/p/2022/c11558/72113,92858,72114,92861/c58/95253/c86/95251"
 
 
 def faixa_idhm(v):
@@ -31,10 +33,12 @@ def _num(t):
 
 
 def _sidra(caminho, cod):
+    """Soma as linhas de valor (uma por categoria pedida)."""
     r = requests.get(SIDRA + caminho.format(cod=cod), timeout=60)
     r.raise_for_status()
-    linhas = r.json()
-    return _num(linhas[1]["V"]) if len(linhas) > 1 else None
+    vals = [_num(l["V"]) for l in r.json()[1:]]
+    vals = [v for v in vals if v is not None]
+    return round(sum(vals), 2) if vals else None
 
 
 def _idhm(cod):
@@ -55,11 +59,11 @@ class Municipios:
         cod = str(cod or "")[:7]
         if len(cod) != 7:
             return {}
-        if cod in self.cache:
+        if cod in self.cache and "precario" in self.cache[cod]:
             return self.cache[cod]
         d = {}
         for chave, fn in (("idhm", lambda: _idhm(cod)), ("agua", lambda: _sidra(AGUA, cod)),
-                          ("esgoto", lambda: _sidra(ESGOTO, cod))):
+                          ("esgoto", lambda: _sidra(ESGOTO, cod)), ("precario", lambda: _sidra(PRECARIO, cod))):
             try:
                 v = fn()
                 if v is not None:
@@ -80,18 +84,26 @@ def _pct(v):
 
 
 def comentario(f, d, populacao=None):
-    """Texto do 1º comentário (sem o link). Vazio se não houver dado."""
+    """Texto do 1º comentário (sem o link): o dado que choca primeiro. Vazio se não houver dado."""
     if not d or not f.get("municipio"):
         return ""
+    choque = []  # (gravidade, linha)
+    if "esgoto" in d:
+        sem = 100 - d["esgoto"]
+        choque.append((sem, f"🚽 {_pct(sem)} dos moradores sem rede de esgoto" if sem >= 20
+                       else f"Esgoto na rede geral: {_pct(d['esgoto'])} dos moradores"))
+    if d.get("precario", 0) >= 5:
+        choque.append((d["precario"], f"💩 {_pct(d['precario'])} despejam em fossa rudimentar, vala, rio ou não têm banheiro"))
+    if "agua" in d:
+        sem = 100 - d["agua"]
+        choque.append((sem, f"🚱 {_pct(sem)} sem água da rede geral" if sem >= 10
+                       else f"Água da rede geral: {_pct(d['agua'])} dos moradores"))
     linhas = [f"📊 {f['municipio'].upper()} ({f.get('uf', '')})"]
-    if populacao:
-        linhas.append(f"População: {populacao:,}".replace(",", ".") + " (IBGE)")
+    linhas += [l for _, l in sorted(choque, key=lambda x: -x[0])]
+    if choque:
+        linhas.append("(IBGE, Censo 2022)")
     if "idhm" in d:
         linhas.append(f"IDHM {d['idhm']:.3f}".replace(".", ",") + f", {faixa_idhm(d['idhm'])} (PNUD, 2010)")
-    if "agua" in d:
-        linhas.append(f"Água da rede geral: {_pct(d['agua'])} dos moradores")
-    if "esgoto" in d:
-        linhas.append(f"Esgoto na rede geral: {_pct(d['esgoto'])} dos moradores")
-    if "agua" in d or "esgoto" in d:
-        linhas.append("(IBGE, Censo 2022)")
+    if populacao:
+        linhas.append(f"População: {populacao:,}".replace(",", ".") + " (IBGE)")
     return "\n".join(linhas) if len(linhas) > 1 else ""
