@@ -90,14 +90,14 @@ def comentario(f, d, populacao=None):
     choque = []  # (gravidade, linha)
     if "esgoto" in d:
         sem = 100 - d["esgoto"]
-        choque.append((sem, f"🚽 {_pct(sem)} dos moradores sem rede de esgoto" if sem >= 20
-                       else f"Esgoto na rede geral: {_pct(d['esgoto'])} dos moradores"))
+        if sem >= 20:
+            choque.append((sem, f"🚽 {_pct(sem)} dos moradores sem rede de esgoto"))
     if d.get("precario", 0) >= 5:
         choque.append((d["precario"], f"💩 {_pct(d['precario'])} despejam em fossa rudimentar, vala, rio ou não têm banheiro"))
     if "agua" in d:
         sem = 100 - d["agua"]
-        choque.append((sem, f"🚱 {_pct(sem)} sem água da rede geral" if sem >= 10
-                       else f"Água da rede geral: {_pct(d['agua'])} dos moradores"))
+        if sem >= 10:
+            choque.append((sem, f"🚱 {_pct(sem)} sem água da rede geral"))
     linhas = [f"📊 {f['municipio'].upper()} ({f.get('uf', '')})"]
     linhas += [l for _, l in sorted(choque, key=lambda x: -x[0])]
     if choque:
