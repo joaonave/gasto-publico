@@ -1,5 +1,6 @@
 """Gatilho: contratos de show/cachê acima do valor mínimo."""
 import re
+from datetime import date, timedelta
 
 from . import config
 from .pncp import link_contrato
@@ -57,9 +58,18 @@ def fatos(c):
     }
 
 
+def _recente(c):
+    d = (c.get("dataAssinatura") or "")[:10]
+    if not d:
+        return True
+    return d >= (date.today() - timedelta(days=config.IDADE_MAX_DIAS)).isoformat()
+
+
 def selecionar(contratos):
     achados = []
     for c in contratos:
+        if not _recente(c):
+            continue
         objeto = c.get("objetoContrato") or ""
         v = _num(c.get("valorGlobal") or c.get("valorInicial"))
         if v >= config.VALOR_MINIMO and _SHOW.search(objeto) and not _EXCLUIR.search(objeto):

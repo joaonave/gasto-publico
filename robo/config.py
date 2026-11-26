@@ -20,6 +20,7 @@ PALAVRAS_EXCLUIR = [r"patroc[ií]nio", r"boat show", r"auto show", r"show ?room"
 PALAVRAS_ESTRUTURA = [r"\bpalco", r"sonoriza", r"ilumina", r"\btenda", r"gerador", r"estrutura"]
 
 VALOR_MINIMO = 200_000  # R$
+IDADE_MAX_DIAS = 90     # só posta contratos assinados nos últimos N dias
 
 # Tom: 1 post a cada N leva comentário de "desiludido"
 COMENTARIO_A_CADA = 4
