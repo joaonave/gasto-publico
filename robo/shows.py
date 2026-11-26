@@ -53,11 +53,23 @@ def _sem_acento(t):
     return unicodedata.normalize("NFKD", t or "").encode("ascii", "ignore").decode().upper()
 
 
+# "do artista DJ Alok, representado..." / "da banda Roupa Nova" / "do cantor X"
+_NOMEADO = re.compile(
+    r"\b(?:d[oa]s?|pel[oa]s?)\s+(?:artistas?|cantor(?:a|es)?|bandas?|grupos?(?: musical)?|duplas?(?: sertanejas?)?|mc)\s+"
+    r"((?:DJ |MC )?[A-ZÀ-Ý0-9][\wÀ-ÿ'&.]*(?:\s+(?:[A-ZÀ-Ý0-9&][\wÀ-ÿ'&.]*|e|&|de|da|do|dos|das))*)")
+
+
 def artista(objeto, fornecedor=""):
-    """Nome do artista: entre aspas no contrato; ou o nome próprio do fornecedor, se ele aparece no objeto."""
+    """Nome do artista: entre aspas no contrato; ou nomeado após "do artista/da banda/do cantor";
+    ou o nome próprio do fornecedor, se ele aparece no objeto."""
     m = _ASPAS.search(objeto or "")
     if m:
         return m.group(1).strip()
+    m = _NOMEADO.search(objeto or "")
+    if m:
+        nome = re.sub(r"\s+(?:e|&|de|da|do|dos|das)$", "", m.group(1).strip())
+        if len(nome) >= 3 and not re.match(r"(?i)(?:para|com|em|no|na|local|regional|nacional)\b", nome):
+            return nome
     palavras = _GENERICOS.sub(" ", fornecedor or "").split()
     while palavras and palavras[0].upper() in _CONECTORES:
         palavras.pop(0)
