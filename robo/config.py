@@ -3,7 +3,8 @@
 # Gatilho: shows e cachês
 PALAVRAS_SHOW = [
     r"\bshows?\b",
-    r"art[ií]stic[oa]",
+    r"apresenta[çc][ãa]o art[ií]stica",
+    r"(servi[çc]os?|profissional|profissionais|atra[çc][ãa]o|atra[çc][õo]es) art[ií]stic",
     r"apresenta[çc][ãa]o musical",
     r"cach[êe]",
     r"banda\b",
@@ -11,7 +12,9 @@ PALAVRAS_SHOW = [
     r"dupla sertaneja",
 ]
 # Objetos que não são cachê de artista (falsos positivos)
-PALAVRAS_EXCLUIR = [r"patroc[ií]nio", r"boat show", r"auto show", r"show ?room", r"agro ?show"]
+PALAVRAS_EXCLUIR = [r"patroc[ií]nio", r"boat show", r"auto show", r"show ?room", r"agro ?show",
+                    r"restaura[çc]", r"\bobras?\b", r"reforma", r"constru[çc]", r"pavimenta",
+                    r"aquisi[çc][ãa]o de", r"material", r"equipamento", r"instrumentos? musica"]
 
 # Objetos que incluem estrutura (palco, som, etc.) não são cachê puro
 PALAVRAS_ESTRUTURA = [r"\bpalco", r"sonoriza", r"ilumina", r"\btenda", r"gerador", r"estrutura"]
