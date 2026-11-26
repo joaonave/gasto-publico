@@ -97,6 +97,19 @@ def executar(data=None):
             log.append(f"Erro em {nome}: {e}")
             print(f"Erro {nome}: {e}")
 
+    # poucos candidatos: busca contratos dos dias anteriores ainda não publicados (até 7 dias)
+    alvo = 3 * pontos.TETO_DIA
+    base = datetime.strptime(data, "%Y%m%d")
+    for k in range(1, 8):
+        if len(candidatos) >= alvo:
+            break
+        dia = (base - timedelta(days=k)).strftime("%Y%m%d")
+        ids = {f["id"] for f in candidatos}
+        try:
+            candidatos += [f for f in _candidatos_pncp(dia, estado, log) if f["id"] not in ids]
+        except Exception as e:  # noqa: BLE001
+            log.append(f"Erro em PNCP {dia}: {e}")
+
     pop = pontos.Populacao(RAIZ / "dados" / "populacao.json")
     muni = municipio.Municipios(RAIZ / "dados" / "municipios.json")
     escolhidos = pontos.escolher(candidatos, estado, hoje, pop)
