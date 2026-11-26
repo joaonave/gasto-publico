@@ -1,6 +1,8 @@
 name: Fila do Buffer (diagnóstico)
 on:
   workflow_dispatch:
+    inputs:
+      apagar: {description: 'trecho do texto a remover da fila', required: false, default: ''}
 permissions:
   contents: write
 jobs:
@@ -14,7 +16,7 @@ jobs:
       - env: {BUFFER_KEY: "${{ secrets.BUFFER_KEY }}"}
         run: |
           mkdir -p dados/diag
-          python -m robo.fila > dados/diag/fila.txt 2>&1 || true
+          if [ -n "${{ inputs.apagar }}" ]; then python -m robo.fila --apagar "${{ inputs.apagar }}" > dados/diag/fila.txt 2>&1 || true; fi
           python -m robo.fila --listar >> dados/diag/fila.txt 2>&1 || true
       - run: |
           git config user.name "github-actions[bot]"

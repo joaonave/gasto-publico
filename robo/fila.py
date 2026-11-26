@@ -46,8 +46,17 @@ def limpar(apagar=True):
     return removidos
 
 
+def apagar_com(trecho):
+    for p in listar():
+        if pendente(p) and trecho.lower() in (p.get("text") or "").lower():
+            r = publicar._gql('mutation { deletePost(input: { id: %s }) { __typename } }' % json.dumps(p["id"]))
+            print(f"  removido: {p['dueAt']} | {(p['text'] or '')[:80]!r} | {r}")
+
+
 if __name__ == "__main__":
-    if "--listar" in sys.argv:
+    if "--apagar" in sys.argv:
+        apagar_com(sys.argv[sys.argv.index("--apagar") + 1])
+    elif "--listar" in sys.argv:
         for p in listar():
             print(p["status"], p["dueAt"], p["createdAt"], "ANTIGO" if antigo(p) else "", repr((p["text"] or "")[:90]))
     else:
