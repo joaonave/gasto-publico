@@ -18,18 +18,14 @@ jobs:
           mkdir -p dados/sonda
           python - <<'PY'
           import json, requests
-          ag = requests.get("https://servicodados.ibge.gov.br/api/v3/agregados", timeout=120).json()
-          l = []
-          for pq in ag:
-              for t in pq.get("agregados", []):
-                  n = t["nome"].lower()
-                  if "esgot" in n or "desenvolvimento humano" in n:
-                      l.append(f'{pq["id"]} | {pq["nome"]} | {t["id"]} | {t["nome"]}')
-          open("dados/sonda/agregados.txt","w").write("\n".join(l))
-          r = requests.get("https://servicodados.ibge.gov.br/api/v1/pesquisas", timeout=120)
-          ps = r.json() if r.ok else []
-          out = [f'{p.get("id")} | {p.get("nome")}' for p in ps]
-          open("dados/sonda/pesquisas.txt","w").write(f"status {r.status_code}\n" + "\n".join(out))
+          B = "https://servicodados.ibge.gov.br/api"
+          def salvar(nome, url):
+              r = requests.get(url, timeout=120)
+              open(f"dados/sonda/{nome}", "w").write(f"status {r.status_code}\n" + r.text[:60000])
+          salvar("7555_meta.json", f"{B}/v3/agregados/7555/metadados")
+          for pq in (37, 10111):
+              salvar(f"pq{pq}_ind.json", f"{B}/v1/pesquisas/{pq}/indicadores")
+              salvar(f"pq{pq}_bh.json", f"{B}/v1/pesquisas/{pq}/resultados/3106200")
           PY
       - run: |
           git config user.name "github-actions[bot]"
