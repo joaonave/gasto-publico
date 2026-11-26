@@ -7,6 +7,7 @@ a diferença é o que foi pago no dia.
 import csv
 import io
 import json
+import re
 import unicodedata
 import zipfile
 from pathlib import Path
@@ -114,8 +115,18 @@ def pagamentos_do_dia(linhas, arq_estado: Path, ano):
     return pagos, False
 
 
+# bancos federais aparecem como favorecido quando só intermediam o repasse (sede em Brasília):
+# o destino real não está no arquivo, então não contam como destino nem como "fora do estado"
+_INTERMEDIARIOS = re.compile(r"^(BANCO DO BRASIL|CAIXA ECONOMICA FEDERAL)", re.IGNORECASE)
+
+
+def intermediario(r):
+    return bool(_INTERMEDIARIOS.match((r.get("favorecido") or "").strip()))
+
+
 def para_planos(linhas):
     """Formato usado pelo raio-X (soma do valor pago por emenda/destino)."""
     return [{"id": _chave(r), "ano": r["ano"], "parlamentar": _n(r["autor"]), "emenda": r["codigo"],
-             "beneficiario": r["municipio"] or r["localidade"], "uf_destino": r["uf"],
+             "beneficiario": "" if intermediario(r) else (r["municipio"] or r["localidade"]),
+             "uf_destino": "" if intermediario(r) else r["uf"],
              "situacao": "", "valor": r["pago"]} for r in linhas]

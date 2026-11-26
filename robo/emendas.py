@@ -142,7 +142,7 @@ def raio_x(nome, todos_planos, cadastro):
         por_ano[x["ano"]] += x["valor"]
         if p.get("uf") and x["uf_destino"] and x["uf_destino"] != p["uf"]:
             fora += x["valor"]
-    top = sorted(por_destino.items(), key=lambda kv: kv[1], reverse=True)[:5]
+    top = sorted(((k, v) for k, v in por_destino.items() if k[0]), key=lambda kv: kv[1], reverse=True)[:5]
     return {
         "nome": p.get("nome", nome.title()), "cargo": p.get("cargo", ""), "partido": p.get("partido", ""),
         "uf": p.get("uf", ""), "total": total, "qtd": len(meus), "destinos": len(por_destino),

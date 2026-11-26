@@ -18,7 +18,7 @@ jobs:
       - env: {BUFFER_KEY: "${{ secrets.BUFFER_KEY }}"}
         run: |
           mkdir -p dados/diag
-          T="${{ inputs.apagar }}"; [ -z "$T" ] && [ -f dados/apagar.txt ] && T="$(cat dados/apagar.txt)"; if [ -n "$T" ]; then python -m robo.fila --apagar "$T" > dados/diag/fila.txt 2>&1 || true; fi
+          T="${{ inputs.apagar }}"; [ -z "$T" ] && [ -f dados/apagar.txt ] && T="$(cat dados/apagar.txt)"; case "$T" in apagar:??????????*) python -m robo.fila --apagar "${T#apagar:}" > dados/diag/fila.txt 2>&1 || true;; esac
           python -m robo.fila --listar >> dados/diag/fila.txt 2>&1 || true
           python - > dados/diag/df.txt 2>&1 <<'PY' || true
           from collections import defaultdict

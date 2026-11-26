@@ -56,6 +56,9 @@ def thread_raio_x(rx):
 def fatos_pagamento(r, cadastro):
     """Post de emenda paga no dia (fonte: download do Portal da Transparência)."""
     from .emendas import norm
+    from .emendas_portal import intermediario
+    if intermediario(r):  # pago a banco federal que só intermedia: destino real desconhecido
+        return None
     cad = cadastro.get(norm(r["autor"]))
     if not cad:  # bancada, comissão ou relator: sem um parlamentar identificável
         return None

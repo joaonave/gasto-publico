@@ -47,6 +47,9 @@ def limpar(apagar=True):
 
 
 def apagar_com(trecho):
+    if len(trecho.strip()) < 10:  # trecho curto apagaria a fila inteira
+        print("  trecho curto demais; nada removido")
+        return
     for p in listar():
         if pendente(p) and trecho.lower() in (p.get("text") or "").lower():
             r = publicar._gql('mutation { deletePost(input: { id: %s }) { __typename } }' % json.dumps(p["id"]))
