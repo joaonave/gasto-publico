@@ -76,7 +76,10 @@ def _manchete_padrao(f):
 def _linha_fato(f):
     if f.get("linha_fato"):
         return f["linha_fato"]
-    partes = [f"{f['fornecedor']}", f"{f['valor_exato']}"]
+    forn = f["fornecedor"]
+    if f.get("qtd_contratos", 1) > 1:
+        forn += f" e mais {f['qtd_contratos'] - 1}"
+    partes = [forn, f"{f['valor_exato']}" + (" cada" if f.get("qtd_contratos", 1) > 1 else "")]
     if f["data_assinatura"]:
         partes.append(f"assinado em {f['data_assinatura']}")
     return " | ".join(p for p in partes if p)

@@ -63,6 +63,7 @@ def executar(data=None):
                    f"Objeto: {f['objeto']}", ""]
         _enfileirar(post, 2)
         estado["vistos"].append(f["id"])
+        estado["vistos"].extend(f.get("ids_extras", []))
 
     linhas += _bloco_emendas(estado)
     linhas += _bloco_cota(estado)
@@ -89,7 +90,7 @@ def _bloco_emendas(estado):
         print(f"Parlamentares no cadastro: {len(cadastro)}")
         todas = emendas_portal.baixar()
         ano = datetime.now(BRT).year
-        pagos, primeira = emendas_portal.pagamentos_do_dia(todas, RAIZ / "dados" / "emendas_pago.json", ano)
+        pagos, primeira = emendas_portal.pagamentos_do_dia(todas, RAIZ / "dados" / "emendas_recebido.json", ano)
         if primeira:
             linhas.append("Primeira execução: base de valores pagos criada. Pagamentos do dia a partir de amanhã.")
         else:

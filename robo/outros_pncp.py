@@ -1,7 +1,7 @@
 """Outros gatilhos do PNCP (mesma coleta dos shows): publicidade/mídia e compras inusitadas."""
 import re
 
-from .shows import _num, _recente, fatos as fatos_base, valor_manchete
+from .shows import _num, _recente, agrupar, fatos as fatos_base, valor_manchete
 
 MIDIA = re.compile(r"publicidade|propaganda|veicula[çc][ãa]o|divulga[çc][ãa]o institucional|"
                    r"ag[êe]ncia de (publicidade|propaganda|comunica)|m[íi]dia (digital|impressa|televisiva)|"
@@ -37,8 +37,7 @@ def selecionar(contratos):
         v = _num(c.get("valorGlobal") or c.get("valorInicial"))
         if v >= MIDIA_MIN and MIDIA.search(obj) and not MIDIA_EXCLUIR.search(obj):
             f = fatos_base(c)
-            f.update(tipo="midia", manchete_padrao=f"{_orgao(f)} PAGA {valor_manchete(v)} EM PUBLICIDADE",
-                     contexto="Contrato de publicidade/propaganda do poder público.")
+            f.update(tipo="midia", contexto="Contrato de publicidade/propaganda do poder público (valor é o teto).")
             saida.append(f)
             continue
         if v >= INUSITADA_MIN and not INUSITADA_EXCLUIR.search(obj):
@@ -51,4 +50,11 @@ def selecionar(contratos):
                     saida.append(f)
                     break
     saida.sort(key=lambda f: f["valor"], reverse=True)
+    saida = agrupar(saida)
+    for f in saida:
+        if f["tipo"] == "midia":
+            n = f["qtd_contratos"]
+            vm = valor_manchete(f["valor"])
+            f["manchete_padrao"] = (f"{_orgao(f)} FECHA {n} CONTRATOS DE PUBLICIDADE DE ATÉ {vm} CADA" if n > 1
+                                    else f"{_orgao(f)} FECHA CONTRATO DE PUBLICIDADE DE ATÉ {vm}")
     return saida

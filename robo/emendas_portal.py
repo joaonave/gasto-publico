@@ -46,7 +46,8 @@ def baixar():
     z = zipfile.ZipFile(io.BytesIO(r.content))
     nomes = [n for n in z.namelist() if n.lower().endswith(".csv")]
     print(f"  arquivos no zip: {nomes}")
-    principal = max(nomes, key=lambda n: z.getinfo(n).file_size)
+    principal = next((n for n in nomes if "PorFavorecido" in n), max(nomes, key=lambda n: z.getinfo(n).file_size))
+    print(f"  usando: {principal}")
     bruto = z.read(principal)
     try:
         texto = bruto.decode("utf-8-sig")
@@ -61,10 +62,12 @@ def baixar():
         "tipo": _col(cab, "TIPO", "EMENDA"),
         "autor": _col(cab, "NOME", "AUTOR"),
         "municipio": _col(cab, "MUNICIPIO", evitar=("CODIGO",)),
-        "uf": _col(cab, "UF", evitar=("CODIGO",)),
+        "uf": _col(cab, "UF", evitar=("CODIGO", "FAVORECIDO")) or _col(cab, "UF", evitar=("CODIGO",)),
         "localidade": _col(cab, "LOCALIDADE"),
         "funcao": _col(cab, "NOME", "FUNCAO", evitar=("SUB",)),
-        "pago": _col(cab, "VALOR", "PAGO", evitar=("RESTOS",)),
+        "pago": _col(cab, "VALOR", "RECEBIDO") or _col(cab, "VALOR", "PAGO", evitar=("RESTOS",)),
+        "favorecido": _col(cab, "FAVORECIDO", evitar=("CODIGO", "TIPO", "UF", "MUNICIPIO")),
+        "cod_favorecido": _col(cab, "CODIGO", "FAVORECIDO"),
         "empenhado": _col(cab, "VALOR", "EMPENHADO"),
     }
     print(f"  mapeamento: {c}")
@@ -73,6 +76,8 @@ def baixar():
         reg = {k: (ln.get(v) or "").strip() if v else "" for k, v in c.items()}
         reg["pago"] = _num(reg["pago"])
         reg["empenhado"] = _num(reg["empenhado"])
+        reg["ano_mes"] = reg["ano"]
+        reg["ano"] = "".join(ch for ch in reg["ano"] if ch.isdigit())[:4]
         if reg["codigo"]:
             linhas.append(reg)
     print(f"  emendas no arquivo: {len(linhas)}")
@@ -81,12 +86,19 @@ def baixar():
 
 def _chave(r):
     # uma emenda pode ter várias linhas (uma por localidade/função): a chave junta tudo
-    return "|".join([r["codigo"], r["municipio"], r["uf"], r["funcao"]])
+    return "|".join([r["codigo"], r.get("cod_favorecido", ""), r.get("ano_mes", ""), r["funcao"]])
 
 
 def pagamentos_do_dia(linhas, arq_estado: Path, ano):
     """Compara o valor pago acumulado com o da última execução. Retorna (pagamentos, primeira_vez)."""
-    atuais = {_chave(r): r for r in linhas if str(r["ano"]) == str(ano)}
+    atuais = {}
+    for r in linhas:
+        if str(r["ano"]) == str(ano):
+            k = _chave(r)
+            if k in atuais:
+                atuais[k] = dict(atuais[k], pago=atuais[k]["pago"] + r["pago"])
+            else:
+                atuais[k] = r
     anteriores = json.loads(arq_estado.read_text(encoding="utf-8")) if arq_estado.exists() else None
     arq_estado.parent.mkdir(parents=True, exist_ok=True)
     arq_estado.write_text(json.dumps({k: r["pago"] for k, r in atuais.items()}), encoding="utf-8")

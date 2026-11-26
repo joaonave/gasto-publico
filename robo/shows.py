@@ -76,4 +76,18 @@ def selecionar(contratos):
         if v >= config.VALOR_MINIMO and _SHOW.search(objeto) and not _EXCLUIR.search(objeto):
             achados.append(fatos(c))
     achados.sort(key=lambda f: f["valor"], reverse=True)
-    return achados
+    return agrupar(achados)
+
+
+def agrupar(fatos_lista):
+    """Mesmo órgão + mesmo objeto = mesma licitação com vários fornecedores: vira um fato só."""
+    grupos = {}
+    for f in fatos_lista:
+        chave = (f["orgao"], f["objeto"][:150].upper())
+        if chave in grupos:
+            g = grupos[chave]
+            g["qtd_contratos"] += 1
+            g["ids_extras"].append(f["id"])
+        else:
+            grupos[chave] = dict(f, qtd_contratos=1, ids_extras=[])
+    return list(grupos.values())

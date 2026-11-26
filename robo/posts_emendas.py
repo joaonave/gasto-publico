@@ -60,7 +60,7 @@ def fatos_pagamento(r, cadastro):
     if not cad:  # bancada, comissão ou relator: sem um parlamentar identificável
         return None
     quem = _quem(cad)
-    destino = (r["municipio"] or r["localidade"] or "").upper()
+    destino = (r["municipio"] or r.get("favorecido") or r["localidade"] or "").upper()
     uf = r["uf"]
     fora = bool(cad["uf"] and uf and uf != cad["uf"])
     vm = valor_manchete(r["pago_dia"])
@@ -75,7 +75,8 @@ def fatos_pagamento(r, cadastro):
         "tipo": "emenda_fora" if fora else "emenda",
         "valor": r["pago_dia"], "valor_manchete": vm, "manchete_padrao": manchete,
         "municipio": r["municipio"], "uf": uf,
-        "linha_fato": f"Emenda {r['codigo']} | {r['funcao']} | pago no ano: {valor_exato(r['pago'])}",
+        "linha_fato": " | ".join(x for x in [f"Emenda {r['codigo']}", r.get("favorecido", ""),
+                                            f"recebido em {r.get('ano_mes', '')}: {valor_exato(r['pago'])}"] if x),
         "contexto": "Pagamento de emenda parlamentar." + (" O parlamentar foi eleito por outro estado." if fora else ""),
         "link": f"https://portaldatransparencia.gov.br/emendas/detalhe?codigoEmenda={r['codigo']}",
     }
