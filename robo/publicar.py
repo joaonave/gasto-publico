@@ -39,13 +39,17 @@ def horarios(qtd, agora=None):
     agora = agora or datetime.now(BRT)
     t = max(agora + timedelta(minutes=10), agora.replace(hour=INICIO_H, minute=0, second=0, microsecond=0))
     fim = agora.replace(hour=FIM_H, minute=0, second=0, microsecond=0)
+    # comprime o intervalo (mín. 30 min) para caber tudo até as 21h quando a rodada começa tarde
+    intervalo = INTERVALO_MIN
+    if qtd and t < fim:
+        intervalo = max(30, min(INTERVALO_MIN, int((fim - t).total_seconds() // 60 // qtd)))
     slots = []
     while len(slots) < qtd:
         if t > fim:  # passou das 21h: começa no dia seguinte
             t = (t + timedelta(days=1)).replace(hour=INICIO_H, minute=0)
             fim = fim + timedelta(days=1)
         slots.append(t)
-        t += timedelta(minutes=INTERVALO_MIN)
+        t += timedelta(minutes=intervalo)
     return slots
 
 
