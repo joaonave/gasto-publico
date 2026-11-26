@@ -70,7 +70,8 @@ def _manchete_padrao(f):
         orgao = "PREFEITURA DE " + orgao[len("MUNICIPIO DE "):]
     uf = f" ({f['uf']})" if f["uf"] and orgao.startswith("PREFEITURA") else ""
     tipo = "SHOW E ESTRUTURA" if f["inclui_estrutura"] else "SHOW"
-    return f"{orgao}{uf} PAGA {f['valor_manchete']} EM {tipo}"
+    de = f" DE {f['artista'].upper()}" if f.get("artista") else ""
+    return f"{orgao}{uf} PAGA {f['valor_manchete']} EM {tipo}{de}"
 
 
 def _linha_fato(f):
@@ -114,14 +115,20 @@ def checar(f, manchete, comentario):
 COMENTARIOS = {
     "show": ["Mas a festa vai ser boa.", "Prioridades.", "O povo pede posto de saúde, a prefeitura entrega palco.",
              "Pão e circo. Só que sem o pão.", "Animação garantida. O resto a gente vê depois.",
-             "E ainda tem quem reclame do buraco na rua."],
+             "E ainda tem quem reclame do buraco na rua.", "Na hora de pagar professor, falta verba.",
+             "Depois do show, a fila do posto continua lá.", "Pelo menos a música é boa. Dizem.",
+             "O orçamento aperta. O palco, nunca.", "Cultura é importante. A conta também.",
+             "Quem paga a entrada é você, mesmo sem ir."],
     "midia": ["Fazer é caro. Contar que fez, mais ainda.", "A propaganda é sempre ótima.",
-              "Se não aparecer, não aconteceu."],
+              "Se não aparecer, não aconteceu.", "A obra pode atrasar. O anúncio, nunca.",
+              "Tudo vai muito bem. Pelo menos na propaganda."],
     "inusitada": ["Servidor público também tem paladar.", "Tudo pelo bem-estar da população.",
-                  "O cardápio do contribuinte é outro."],
+                  "O cardápio do contribuinte é outro.", "Na sua casa tem isso todo dia?"],
     "cota": ["Tudo dentro da regra. Esse é o problema.", "Reembolsado com carinho pelo contribuinte.",
-             "Mandato dá fome."],
-    "emenda": ["Coincidências da política.", "O mapa do voto explica muita coisa.", "Generosidade com o dinheiro dos outros."],
+             "Mandato dá fome.", "A regra permite. Você paga.", "Trabalho duro exige conforto."],
+    "emenda": ["Coincidências da política.", "Generosidade com o dinheiro dos outros.",
+               "O mapa do voto explica muita coisa.", "Brasília manda. A gente paga.",
+               "Cada um com suas prioridades."],
 }
 
 
@@ -190,10 +197,10 @@ def montar(f, pedir_comentario):
     except Exception as e:  # noqa: BLE001
         print(f"  Grok indisponível ({e}); usando manchete padrão")
 
-    if pedir_comentario and not comentario:
+    if not comentario:
         comentario = _comentario_banco(f)
     erros = checar(f, manchete, comentario)
-    embaixo = f"{comentario}\n\n{_linha_fato(f)}" if comentario else _linha_fato(f)
+    embaixo = comentario
     post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{_hashtags(f)}".rstrip()
     if len(post) - len(f["link"]) + 23 > 280:  # sem espaço: tira as hashtags, nunca o fato
         post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}"

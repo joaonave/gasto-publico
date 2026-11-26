@@ -38,6 +38,15 @@ def _local(c):
     return u.get("municipioNome") or "", u.get("ufSigla") or ""
 
 
+_ASPAS = re.compile(r'[“"«]([^”"»]{3,60})[”"»]')
+
+
+def artista(objeto):
+    """Nome do artista só quando o próprio contrato o escreve entre aspas."""
+    m = _ASPAS.search(objeto or "")
+    return m.group(1).strip() if m else ""
+
+
 def fatos(c):
     v = _num(c.get("valorGlobal") or c.get("valorInicial"))
     municipio, uf = _local(c)
@@ -56,6 +65,7 @@ def fatos(c):
         "data_assinatura": "/".join(reversed(data.split("-"))) if data else "",
         "link": link_contrato(c),
         "inclui_estrutura": bool(_ESTRUTURA.search(c.get("objetoContrato") or "")),
+        "artista": artista(c.get("objetoContrato")),
     }
 
 

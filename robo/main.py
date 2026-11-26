@@ -71,7 +71,12 @@ def executar(data=None):
     if ligar_publicacao and FILA:
         FILA.sort(key=lambda x: x[0])
         # intercala categorias: o sort é estável, então mantém a ordem de valor dentro de cada uma
-        resultados = publicar.agendar([t for _, t in FILA])
+        hoje = datetime.now(BRT).strftime("%Y-%m-%d")
+        if estado.get("pub_dia") != hoje:
+            estado["pub_dia"], estado["pub_qtd"] = hoje, 0
+        vagas = max(0, publicar.MAX_POR_DIA - estado.get("pub_qtd", 0))
+        resultados = publicar.agendar([t for _, t in FILA][:vagas]) if vagas else []
+        estado["pub_qtd"] = estado.get("pub_qtd", 0) + sum(1 for _, r in resultados if r.startswith("agendado"))
         linhas += ["", "# Publicação (Buffer)", ""] + [f"- {r}: {t.splitlines()[0][:90]}" for t, r in resultados]
     elif FILA:
         linhas += ["", f"Publicação desligada: {len(FILA)} posts prontos."]
