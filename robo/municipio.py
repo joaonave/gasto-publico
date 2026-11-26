@@ -83,11 +83,29 @@ def _pct(v):
     return f"{v:.1f}".replace(".", ",") + "%"
 
 
-def comentario(f, d, populacao=None):
-    """Texto do 1º comentário (sem o link): o dado que choca primeiro. Vazio se não houver dado."""
-    if not d or not f.get("municipio"):
+# cidade com infra boa: ironia em vez de número neutro
+IRONIA = {
+    "show": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. Aí sobra pro show.",
+             "Saneamento resolvido ({esg} com esgoto na rede). Agora é festa.",
+             "Infra em dia: {esg} com esgoto na rede. Prioridade agora é o palco."],
+    "midia": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. Falta só contar pra todo mundo.",
+              "Com {esg} de esgoto na rede, o problema agora é a divulgação."],
+    "outro": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. Pode gastar.",
+              "Saneamento resolvido ({esg} com esgoto na rede). Sobrou."],
+}
+
+
+def comentario(f, d, populacao=None, hom=None, anos_hom=""):
+    """Texto do 1º comentário (sem o link): o dado que choca primeiro. Vazio se não houver dado.
+    hom = (taxa por 100 mil/ano, vezes a média do país, óbitos no período)."""
+    if not f.get("municipio") or not (d or hom):
         return ""
+    d = d or {}
     choque = []  # (gravidade, linha)
+    if hom and hom[1] >= 1.5 and hom[2] >= 5:
+        vezes = f"{hom[1]:.1f}".replace(".", ",")
+        choque.append((hom[1] * 40, f"🔪 {hom[0]:.0f} homicídios por 100 mil hab. ao ano, {vezes}x a média do país"
+                       f" (DataSUS, {anos_hom})"))
     if "esgoto" in d:
         sem = 100 - d["esgoto"]
         if sem >= 20:
@@ -100,8 +118,12 @@ def comentario(f, d, populacao=None):
             choque.append((sem, f"🚱 {_pct(sem)} sem água da rede geral"))
     linhas = [f"📊 {f['municipio'].upper()} ({f.get('uf', '')})"]
     linhas += [l for _, l in sorted(choque, key=lambda x: -x[0])]
-    if choque:
+    if any("IBGE" not in l and ("🚽" in l or "💩" in l or "🚱" in l) for _, l in choque):
         linhas.append("(IBGE, Censo 2022)")
+    elif not choque and d.get("esgoto", 0) >= 90 and d.get("agua", 0) >= 95:
+        banco = IRONIA.get(f.get("tipo"), IRONIA["outro"])
+        frase = banco[sum(map(ord, f.get("id", f["municipio"]))) % len(banco)]
+        linhas += [frase.format(esg=_pct(d["esgoto"])), "(IBGE, Censo 2022)"]
     if "idhm" in d:
         linhas.append(f"IDHM {d['idhm']:.3f}".replace(".", ",") + f", {faixa_idhm(d['idhm'])} (PNUD, 2010)")
     if populacao:

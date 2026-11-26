@@ -68,6 +68,32 @@ def _mutacao(post, canal_id, due, com_imagem=True, com_thread=True):
             "... on MutationError { message } } }" % ", ".join(partes))
 
 
+def _tam_x(texto):
+    """Tamanho no X: link conta 23."""
+    import re
+    t = re.sub(r"https?://\S+", "x" * 23, texto)
+    return len(t) + sum(1 for c in t if ord(c) > 0xFFFF)  # emoji conta 2
+
+
+def _caber(dados, sufixo=""):
+    """Corta o 1º comentário até caber em 280: população, IDHM, depois o dado menos grave.
+    A linha de fonte (IBGE) fica enquanto houver dado de saneamento."""
+    linhas = dados.split("\n") if dados else []
+    fonte = "(IBGE, Censo 2022)"
+    while linhas and _tam_x("\n".join(linhas) + sufixo) > 280:
+        tira = next((l for l in reversed(linhas) if l.startswith(("População", "IDHM"))), None)
+        if tira is None:
+            dados_l = [l for l in linhas[1:] if l != fonte]
+            if not dados_l:
+                return ""
+            tira = dados_l[-1]
+        linhas.remove(tira)
+        if fonte in linhas and not any(l.startswith(("🚽", "💩", "🚱")) or "Dinamarca" in l or "esgoto na rede" in l
+                                       for l in linhas):
+            linhas.remove(fonte)
+    return "\n".join(linhas) if len(linhas) > 1 else ""
+
+
 def agendar(posts):
     """posts: lista de dicts com texto, corpo_sem_link, link, variante_link e card (caminho no repositório).
     Tenta com imagem e com link na resposta; se o Buffer recusar, simplifica até publicar."""
@@ -82,11 +108,13 @@ def agendar(posts):
         tentativas = []
         dados = post.get("dados_municipio") or ""
         if post.get("variante_link") == "resposta":
-            resp = (dados + "\n\n" if dados else "") + f"Fonte oficial:\n{post['link']}"
+            fonte = f"Fonte oficial:\n{post['link']}"
+            dados_ok = _caber(dados, "\n\n" + fonte)
+            resp = (dados_ok + "\n\n" if dados_ok else "") + fonte
             p2 = dict(post, texto_final=post["corpo_sem_link"], resposta=resp)
             tentativas += [(p2, True, True), (p2, False, True)]
-        elif dados:
-            p2 = dict(post, texto_final=post["texto"], resposta=dados)
+        elif _caber(dados):
+            p2 = dict(post, texto_final=post["texto"], resposta=_caber(dados))
             tentativas += [(p2, True, True), (p2, False, True)]
         p1 = dict(post, texto_final=post["texto"], resposta=None)
         tentativas += [(p1, True, False), (p1, False, False)]

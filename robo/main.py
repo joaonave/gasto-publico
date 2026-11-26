@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import card, cota, municipio, qa, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
+from . import card, cota, homicidios, municipio, qa, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -112,6 +112,7 @@ def executar(data=None):
 
     pop = pontos.Populacao(RAIZ / "dados" / "populacao.json")
     muni = municipio.Municipios(RAIZ / "dados" / "municipios.json")
+    hom = homicidios.Homicidios(pop.por_cod)
     escolhidos = pontos.escolher(candidatos, estado, hoje, pop)
     log += ["", f"Candidatos: {len(candidatos)} | escolhidos pelo sistema de pontos: {len(escolhidos)} "
                 f"(já publicados hoje: {estado.get('pub_qtd', 0)})", ""]
@@ -133,7 +134,8 @@ def executar(data=None):
         # dados da cidade só quando o post é sobre a cidade: órgão municipal (PNCP) ou destino de emenda
         local = str(f.get("tipo", "")).startswith("emenda") or re.search(r"munic|prefeit", f.get("orgao") or "", re.IGNORECASE)
         cod = pop.cod(f) if local else ""
-        post["dados_municipio"] = municipio.comentario(f, muni.dados(cod), pop.por_cod.get(cod)) if cod else ""
+        post["dados_municipio"] = municipio.comentario(
+            f, muni.dados(cod), pop.por_cod.get(cod), hom.de(cod), getattr(hom, "anos", "")) if cod else ""
         status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
         hab = f" | R$/hab {f['por_habitante']:.2f}" if f.get("por_habitante") else ""
         log += [f"## {status} | {f.get('tipo')} | nota {f['nota']}{hab} | tags {post['variante_tag']}",
