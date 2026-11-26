@@ -83,7 +83,8 @@ def _linha_fato(f):
 
 
 LINKS_OK = ("https://pncp.gov.br/", "https://api.transferegov.gestao.gov.br/",
-            "https://portaldatransparencia.gov.br/")
+            "https://portaldatransparencia.gov.br/", "https://www.camara.leg.br/",
+            "https://camara.leg.br/", "https://www.senado.leg.br/")
 
 PROIBIDAS = re.compile(r"corrup|desvi|roub|superfatur|propina|ladr|crime|fraud", re.IGNORECASE)
 

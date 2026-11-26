@@ -18,8 +18,8 @@ def _num(v):
 
 def valor_manchete(v):
     """Valor arredondado para a manchete, sempre exibido do mesmo jeito."""
-    if v < 500:
-        return "R$ 0"
+    if v < 10_000:
+        return "R$ " + f"{round(v):,}".replace(",", ".")
     if round(v / 1000) >= 1000:
         mi = round(v / 1_000_000, 2)
         txt = f"{mi:.2f}".rstrip("0").rstrip(".").replace(".", ",")

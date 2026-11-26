@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import config, emendas, pncp, posts_emendas, redacao, shows
+from . import config, cota, emendas, pncp, posts_emendas, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -57,6 +57,7 @@ def executar(data=None):
         estado["vistos"].append(f["id"])
 
     linhas += _bloco_emendas(estado)
+    linhas += _bloco_cota(estado)
 
     SAIDA.mkdir(exist_ok=True)
     arq = SAIDA / f"{data}.md"
@@ -101,6 +102,31 @@ def _bloco_emendas(estado):
     except Exception as e:  # noqa: BLE001
         linhas.append(f"Erro no bloco de emendas: {e}")
         print(f"Erro emendas: {e}")
+    return linhas
+
+
+def _bloco_cota(estado):
+    linhas = ["", "# Cota parlamentar (Câmara)", ""]
+    try:
+        ano = datetime.now(BRT).year
+        notas = cota.baixar(ano)
+        vistos = set(estado.get("cota_ids", []))
+        if not vistos:
+            linhas.append(f"Primeira execução: base criada com {len(cota.recentes(notas))} notas recentes de {ano}. "
+                          "Posts a partir de amanhã.")
+            fatos = []
+        else:
+            fatos, _ = cota.gatilhos(notas, vistos)
+            linhas.append(f"Gatilhos disparados: {len(fatos)}")
+        for f in fatos:
+            estado["contador_posts"] += 1
+            post = redacao.montar(f, estado["contador_posts"] % config.COMENTARIO_A_CADA == 0)
+            status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
+            linhas += [f"## {status} ({f['tipo']})", "```", post["texto"], "```", ""]
+        estado["cota_ids"] = ["cota-" + str(n["id"]) for n in cota.recentes(notas)]
+    except Exception as e:  # noqa: BLE001
+        linhas.append(f"Erro no bloco da cota: {e}")
+        print(f"Erro cota: {e}")
     return linhas
 
 
