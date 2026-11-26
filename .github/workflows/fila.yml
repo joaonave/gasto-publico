@@ -1,8 +1,6 @@
 name: Fila do Buffer (diagnóstico)
 on:
   workflow_dispatch:
-  push:
-    paths: [".github/workflows/fila.yml", "robo/fila.py"]
 permissions:
   contents: write
 jobs:
