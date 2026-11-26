@@ -49,29 +49,51 @@ def horarios(qtd, agora=None):
     return slots
 
 
-MUT = """mutation {
-  createPost(input: { text: %s, channelId: %s, schedulingType: automatic, mode: customScheduled, dueAt: %s }) {
-    ... on PostActionSuccess { post { id dueAt } }
-    ... on MutationError { message }
-  }
-}"""
+REPO_RAW = "https://raw.githubusercontent.com/joaonave/gasto-publico/main/"
 
 
-def agendar(textos):
-    """Agenda os textos no X. Retorna lista de (texto, resultado)."""
+def _mutacao(post, canal_id, due, com_imagem=True, com_thread=True):
+    partes = [f"text: {json.dumps(post["texto_final"], ensure_ascii=False)}", f"channelId: {json.dumps(canal_id)}",
+              "schedulingType: automatic", "mode: customScheduled", f"dueAt: {json.dumps(due)}"]
+    if com_imagem and post.get("card"):
+        partes.append("assets: [{ image: { url: %s } }]" % json.dumps(REPO_RAW + post["card"]))
+    if com_thread and post.get("resposta"):
+        itens = ", ".join("{ text: %s }" % json.dumps(t, ensure_ascii=False) for t in (post["texto_final"], post["resposta"]))
+        partes.append("metadata: { twitter: { thread: [%s] } }" % itens)
+    return ("mutation { createPost(input: { %s }) { ... on PostActionSuccess { post { id dueAt } } "
+            "... on MutationError { message } } }" % ", ".join(partes))
+
+
+def agendar(posts):
+    """posts: lista de dicts com texto, corpo_sem_link, link, variante_link e card (caminho no repositório).
+    Tenta com imagem e com link na resposta; se o Buffer recusar, simplifica até publicar."""
     if not os.environ.get("BUFFER_KEY"):
-        return [(t, "sem BUFFER_KEY: não publicado") for t in textos]
-    textos = textos[:MAX_POR_DIA]
+        return [(p["texto"], "sem BUFFER_KEY: não publicado") for p in posts]
+    posts = posts[:MAX_POR_DIA]
     canal = canal_x()
     print(f"  Buffer: canal {canal['name']} ({canal['service']})")
     saida = []
-    for texto, quando in zip(textos, horarios(len(textos))):
+    for post, quando in zip(posts, horarios(len(posts))):
         due = quando.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
-        try:
-            r = _gql(MUT % (json.dumps(texto), json.dumps(canal["id"]), json.dumps(due)))["createPost"]
-            res = f"agendado {quando:%d/%m %H:%M}" if "post" in r else f"erro: {r.get('message')}"
-        except Exception as e:  # noqa: BLE001
-            res = f"erro: {e}"
+        tentativas = []
+        if post.get("variante_link") == "resposta":
+            p2 = dict(post, texto_final=post["corpo_sem_link"], resposta=f"Fonte oficial:\n{post['link']}")
+            tentativas += [(p2, True, True), (p2, False, True)]
+        p1 = dict(post, texto_final=post["texto"], resposta=None)
+        tentativas += [(p1, True, False), (p1, False, False)]
+        res = "erro"
+        for p, img, th in tentativas:
+            try:
+                r = _gql(_mutacao(p, canal["id"], due, img, th))["createPost"]
+            except Exception as e:  # noqa: BLE001
+                r = {"message": str(e)[:200]}
+            if "post" in r:
+                res = (f"agendado {quando:%d/%m %H:%M} | imagem: {'sim' if img and p.get('card') else 'não'}"
+                       f" | link: {'resposta' if th else 'post'}")
+                break
+            res = f"erro: {r.get('message')}"
+            if "limit" in res.lower():
+                break
         print(f"  {res}")
-        saida.append((texto, res))
+        saida.append((post["texto"], res))
     return saida

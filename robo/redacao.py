@@ -118,19 +118,22 @@ COMENTARIOS = {
              "E ainda tem quem reclame do buraco na rua.", "Na hora de pagar professor, falta verba.",
              "Depois do show, a fila do posto continua lá.", "Pelo menos a música é boa. Dizem.",
              "O orçamento aperta. O palco, nunca.", "Cultura é importante. A conta também.",
-             "Quem paga a entrada é você, mesmo sem ir."],
+             "Quem paga a entrada é você, mesmo sem ir.", "Na sua cidade também é assim?",
+             "Você iria nesse show sabendo que já pagou?", "Quanto custou o último show na sua cidade?"],
     "midia": ["Fazer é caro. Contar que fez, mais ainda.", "A propaganda é sempre ótima.",
               "Se não aparecer, não aconteceu.", "A obra pode atrasar. O anúncio, nunca.",
-              "Tudo vai muito bem. Pelo menos na propaganda."],
+              "Tudo vai muito bem. Pelo menos na propaganda.", "Você já viu essa propaganda por aí?"],
     "inusitada": ["Servidor público também tem paladar.", "Tudo pelo bem-estar da população.",
-                  "O cardápio do contribuinte é outro.", "Na sua casa tem isso todo dia?"],
+                  "O cardápio do contribuinte é outro.", "Na sua casa tem isso todo dia?",
+                  "Alguém aí foi convidado?"],
     "cota": ["Tudo dentro da regra. Esse é o problema.", "Reembolsado com carinho pelo contribuinte.",
-             "Mandato dá fome.", "A regra permite. Você paga.", "Trabalho duro exige conforto."],
+             "Mandato dá fome.", "A regra permite. Você paga.", "Trabalho duro exige conforto.",
+             "Você pediria reembolso disso no seu trabalho?"],
     "raiox": ["Cada um sabe onde planta.", "O mapa do dinheiro conta a história.",
               "Amanhã tem outro.", "Guarde esse nome."],
     "emenda": ["Coincidências da política.", "Generosidade com o dinheiro dos outros.",
                "O mapa do voto explica muita coisa.", "Brasília manda. A gente paga.",
-               "Cada um com suas prioridades."],
+               "Cada um com suas prioridades.", "Seu deputado mandou verba pra sua cidade?"],
 }
 
 
@@ -214,5 +217,8 @@ def montar(f, pedir_comentario):
     tamanho = len(post) - len(f["link"]) + 23
     if tamanho > 280:
         erros.append(f"post com {tamanho} caracteres")
-    return {"texto": post, "erros": erros, "origem": origem, "comentario": bool(comentario),
+    corpo_sem_link = f"{manchete}\n\n{embaixo}\n\n{_hashtags(f)}".strip()
+    return {"texto": post, "corpo_sem_link": corpo_sem_link, "link": f["link"],
+            "variante_link": "resposta" if sum(map(ord, str(f.get("id", "")))) % 2 else "post",
+            "erros": erros, "origem": origem, "comentario": bool(comentario),
             "variante_tag": _variante(f)}

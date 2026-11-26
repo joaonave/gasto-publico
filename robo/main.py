@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import cota, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
+from . import card, cota, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -107,7 +107,13 @@ def executar(data=None):
         log += [f"## {status} | {f.get('tipo')} | nota {f['nota']}{hab} | tags {post['variante_tag']}",
                 "```", post["texto"], "```", f"Objeto: {f.get('objeto', '')[:300]}", ""]
         if not post["erros"]:
-            aprovados.append((f, post["texto"]))
+            nome_card = f"cards/{hoje}/{abs(hash(f['id'])) % 10**10}.png"
+            try:
+                card.gerar(f, RAIZ / nome_card)
+            except Exception as e:  # noqa: BLE001
+                print(f"  card falhou: {e}")
+                nome_card = ""
+            aprovados.append((f, dict(post, card=nome_card)))
 
     # o que não foi escolhido fica registrado, com a nota
     resto = [f for f in candidatos if f not in escolhidos]
@@ -117,10 +123,13 @@ def executar(data=None):
             for f in sorted(resto, key=lambda f: -f.get("nota", 0))[:30]]
 
     if ligar and aprovados:
-        resultados = publicar.agendar([t for _, t in aprovados])
-        publicados = [f for (f, _), (_, r) in zip(aprovados, resultados) if r.startswith("agendado")]
+        # publicação acontece no passo seguinte do workflow, depois que os cards estiverem no GitHub
+        (RAIZ / "dados").mkdir(exist_ok=True)
+        (RAIZ / "dados" / "pendentes.json").write_text(json.dumps(
+            {"saida": f"saida/{data}.md", "posts": [p for _, p in aprovados]}, ensure_ascii=False), encoding="utf-8")
+        publicados = [f for f, _ in aprovados]
         pontos.registrar(estado, publicados)
-        log += ["", "# Publicação (Buffer)", ""] + [f"- {r}: {t.splitlines()[0][:90]}" for t, r in resultados]
+        log += ["", f"{len(aprovados)} posts prontos para o Buffer (resultado abaixo)."]
         for f in publicados:
             estado["vistos"].append(f["id"])
             estado["vistos"].extend(f.get("ids_extras", []))

@@ -48,7 +48,16 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add saida dados
+          git add saida dados cards
           git diff --cached --quiet || git commit -m "Posts do dia"
+          git pull --rebase -X theirs origin main
+          git push
+      - name: Publicar no Buffer (com cards)
+        env:
+          BUFFER_KEY: ${{ secrets.BUFFER_KEY }}
+        run: |
+          python -m robo.publicar_pendentes
+          git add saida dados
+          git diff --cached --quiet || git commit -m "Resultado da publicação"
           git pull --rebase -X theirs origin main
           git push
