@@ -129,8 +129,14 @@ def _comentario_banco(f):
     return lista[sum(map(ord, str(f.get("id", "")))) % len(lista)]
 
 
-TAG_TIPO = {"show": "#Shows", "midia": "#Publicidade", "inusitada": "#DinheiroPublico",
-            "cota": "#CotaParlamentar", "emenda": "#EmendaPix"}
+TAG_TIPO = {"cota": "#CotaParlamentar", "emenda": "#EmendaPix"}  # só temas que as pessoas buscam
+
+ESTADOS = {"AC": "Acre", "AL": "Alagoas", "AP": "Amapa", "AM": "Amazonas", "BA": "Bahia", "CE": "Ceara",
+           "DF": "DistritoFederal", "ES": "EspiritoSanto", "GO": "Goias", "MA": "Maranhao", "MT": "MatoGrosso",
+           "MS": "MatoGrossoDoSul", "MG": "MinasGerais", "PA": "Para", "PB": "Paraiba", "PR": "Parana",
+           "PE": "Pernambuco", "PI": "Piaui", "RJ": "RioDeJaneiro", "RN": "RioGrandeDoNorte",
+           "RS": "RioGrandeDoSul", "RO": "Rondonia", "RR": "Roraima", "SC": "SantaCatarina", "SP": "SaoPaulo",
+           "SE": "Sergipe", "TO": "Tocantins"}
 
 
 def _hashtags(f):
@@ -142,10 +148,14 @@ def _hashtags(f):
     tags = []
     if f.get("municipio"):
         tags.append("#" + limpa(f["municipio"]))
-    if f.get("uf"):
-        tags.append("#" + f["uf"].upper())
+    if f.get("uf") in ESTADOS:
+        tags.append("#" + ESTADOS[f["uf"]])
+    if f.get("artista"):
+        tags.append("#" + limpa(f["artista"]))
     tipo = f.get("tipo", "show")
-    tags.append(next((v for k, v in TAG_TIPO.items() if tipo.startswith(k)), "#DinheiroPublico"))
+    tag = next((v for k, v in TAG_TIPO.items() if tipo.startswith(k)), None)
+    if tag:
+        tags.append(tag)
     return " ".join(dict.fromkeys(t for t in tags if len(t) > 1))
 
 
