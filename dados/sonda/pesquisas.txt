@@ -1,0 +1,95 @@
+status 200
+1 | MUNIC - Perfil dos Municípios Brasileiros
+13 | Censo escolar - sinopse
+33 | Sinopse municipal
+37 | Índice de Desenvolvimento Humano
+48 | Sinopse estadual
+45 | Síntese de Indicadores Sociais
+53 | Projeção da população
+10058 | Panorama municipal
+10059 | Sinopse Brasil
+10063 | Demografia das empresas
+10065 | Panorama Brasil
+10070 | PNADC - Pesquisa Nacional por Amostra de Domicílios Contínua
+10071 | Países
+10072 | ESTADIC - Perfil dos Estados Brasileiros
+10073 | Estatísticas de Gênero: indicadores sociais das mulheres no Brasil
+10090 | Países 2018
+10091 | Desigualdades Sociais por Cor ou Raça no Brasil
+10092 | Sistema de Informações e Indicadores Culturais
+10094 | PNAD COVID-19
+10095 | PNAD COVID-19 Mensal
+10096 | Pesquisa Pulso Empresa
+10097 | Produtos agropecuários
+10101 | Panorama censo 2022
+10103 | Demografia das empresas e estatísticas de empreendedorismo (série atual)
+10105 | Panorama censo 2022 (extensões)
+10112 | Dados sobre gênero
+10057 | Relações entre as alterações históricas na dinâmica demográfica brasileira e impactos decorrentes do processo de envelhecimento da população
+43 | Censo - Séries históricas
+23 | Censo 2010
+11 | SNIG - Pesquisa Nacional de Informação de Gênero
+36 | Mapa de pobreza e desigualdade
+10053 | Migrações
+40 | Índice de Desenvolvimento da Educação Básica
+24 | Censo Agropecuário
+32 | Serviços de saúde
+39 | Taxa de mortalidade infantil
+17 | Mortalidade
+42 | Notificações de dengue registradas
+15 | Produção Agrícola - Lavoura Permanente
+14 | Produção Agrícola - Lavoura Temporária
+31 | Produção agrícola - Cereais, leguminosas e oleaginosas
+18 | Pecuária
+20 | Registro civil
+21 | Finanças públicas
+19 | Cadastro Central de Empresas
+10062 | Estatísticas de empreendedorismo
+22 | Frota de veículos
+30 | Pesquisa Nacional de Saneamento Básico
+10074 | Contas Econômicas Ambientais da Água
+34 | Pesquisa de serviços de hospedagem
+16 | Extração vegetal e Silvicultura
+38 | Produto Interno Bruto dos Municípios
+10060 | Sistema de Contas Regionais
+10111 | Índice de Desenvolvimento Humano municipal
+44 | PNAD - Pesquisa Nacional por Amostra de Domicílios
+47 | Pesquisa Nacional de Saúde
+46 | POF - Pesquisa de Orçamentos Familiares
+49 | Pesquisa Anual da Indústria da Construção
+50 | Pesquisa Anual de Comércio
+51 | Pesquisa Industrial Anual - Empresa
+52 | Pesquisa Anual de Serviços
+10054 | Tábuas abreviadas de mortalidade por sexo e idade
+10055 | Indicadores sociodemográficos e de saúde no Brasil
+10056 | Pesquisa Nacional de Saúde do Escolar
+10061 | Pesquisa Industrial Anual - Produto
+10066 | Entidades de assistência social privadas sem fins lucrativos
+10093 | Conta-Satélite de Saúde
+10089 | Sistema de Contas Nacionais
+10083 | Estatísticas de Finanças Públicas e Conta Intermediária de Governo
+10076 | ESTADIC - Suplemento Esporte
+10080 | ESTADIC - Suplemento Cultura
+10081 | ESTADIC - Suplemento Inclusão Produtiva
+10082 | ESTADIC - Suplemento Assistência Social
+10079 | MUNIC - Suplemento Assistência Social
+10084 | MUNIC - Suplemento Inclusão Produtiva
+10085 | MUNIC - Suplemento Cultura
+10077 | MUNIC - Suplemento Esporte
+10078 | MUNIC - Suplemento Meio Ambiente
+10075 | MUNIC - Suplemento Finanças Públicas
+10088 | Demografia das empresas e estatísticas de empreendedorismo
+10086 | Retroprojeção da população
+10087 | MUNIC - Suplemento de Saneamento Básico
+35 | Fundações privadas e associações sem fins lucrativos
+10064 | Pesquisa de inovação
+10099 | Pessoas com Deficiência e as Desigualdades Sociais
+10098 | Contas econômicas ambientais de energia: produtos da biomassa Brasil
+10115 | População em áreas de risco
+10100 | Estabelecimentos agropecuários em Unidades de Conservação e Terras indígenas
+10113 | Igualdade Étnico-Racial
+10114 | Igualdade Étnico-Racial
+10102 | Censo 2022
+29 | Instituições financeiras
+10109 | MUNIC - Suplemento de Segurança Alimentar
+10110 | ESTADIC - Suplemento de Segurança Alimentar
