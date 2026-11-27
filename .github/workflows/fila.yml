@@ -20,20 +20,29 @@ jobs:
           mkdir -p dados/diag
           T="${{ inputs.apagar }}"; [ -z "$T" ] && [ -f dados/apagar.txt ] && T="$(cat dados/apagar.txt)"; case "$T" in apagar:??????????*) python -m robo.fila --apagar "${T#apagar:}" > dados/diag/fila.txt 2>&1 || true;; esac
           python -m robo.fila --listar >> dados/diag/fila.txt 2>&1 || true
-          python - > dados/diag/pix.txt 2>&1 <<'PY' || true
-          from collections import Counter, defaultdict
-          from robo import emendas_portal
-          L = emendas_portal.baixar()
-          print(Counter(r["tipo"] for r in L).most_common(12))
-          pix = [r for r in L if "ESPECIA" in (r["tipo"] or "").upper()]
-          print("pix linhas", len(pix))
-          print(Counter((r["natureza"], r["tipo_favorecido"]) for r in pix).most_common(6))
-          print(Counter(r["ano_mes"] for r in pix if str(r["ano_mes"]).startswith("2026")).most_common(12))
-          for r in pix[-5:]: print({k: r[k] for k in ("autor","favorecido","municipio","uf","ano_mes","pago","funcao")})
-          g = defaultdict(float)
-          for r in pix:
-              if str(r["ano_mes"]).startswith("2026"): g[(r["municipio"], r["uf"])] += r["pago"] or 0
-          print("cidades com pix 2026:", len(g), "total", round(sum(g.values())/1e9, 2), "bi")
+          python - > dados/diag/ranking.txt 2>&1 <<'PY' || true
+          from collections import defaultdict
+          from robo import emendas, emendas_portal
+          L = emendas_portal.baixar(); cad = emendas.parlamentares()
+          por, tipo = defaultdict(float), defaultdict(lambda: defaultdict(float))
+          for r in L:
+              if str(r["ano_mes"]).startswith("2026"):
+                  k = emendas.norm(r["autor"]); por[k] += r["pago"] or 0; tipo[k][r["tipo"]] += r["pago"] or 0
+          ok = {k: v for k, v in por.items() if k in cad}
+          print("parlamentares com pagamento 2026:", len(ok), "| total", round(sum(ok.values())/1e9, 2), "bi | fora do cadastro (bancada/comissão/relator/ex):", round(sum(v for k, v in por.items() if k not in cad)/1e9, 2), "bi")
+          print("== TOP 15")
+          for k, v in sorted(ok.items(), key=lambda kv: -kv[1])[:15]:
+              c = cad[k]; t = tipo[k]
+              print(f"{v/1e6:7.1f} mi | {c['cargo']} {c['nome']} ({c['partido']}-{c['uf']}) | pix {t.get('Emenda Individual - Transferências Especiais',0)/1e6:.1f} | finalidade {t.get('Emenda Individual - Transferências com Finalidade Definida',0)/1e6:.1f}")
+          print("== BOTTOM 5 (com pagamento)")
+          for k, v in sorted(ok.items(), key=lambda kv: kv[1])[:5]:
+              c = cad[k]; print(f"{v/1e6:7.2f} mi | {c['cargo']} {c['nome']} ({c['partido']}-{c['uf']})")
+          for campo in ("partido", "uf"):
+              g, n = defaultdict(float), defaultdict(int)
+              for k, v in ok.items(): g[cad[k][campo]] += v; n[cad[k][campo]] += 1
+              print(f"== POR {campo.upper()} (total | média por parlamentar | qtd)")
+              for x, v in sorted(g.items(), key=lambda kv: -kv[1] / n[kv[0]])[:30]:
+                  print(f"  {x:14s} {v/1e6:8.1f} mi | {v/n[x]/1e6:6.1f} mi/parl | {n[x]}")
           PY
           python -m robo.noticias > dados/diag/noticias.txt 2>&1 || true
           python -m robo.fila --metricas > dados/diag/metricas.json 2> dados/diag/metricas_erro.txt || true
