@@ -15,7 +15,7 @@ Formato obrigatório (responda só com JSON):
 
 Regras da manchete:
 - TODA EM CAIXA ALTA, uma frase, sem emoji, até 140 caracteres.
-- Diz o fato: quem pagou, quanto, por quê. Ex.: PREFEITURA DE X (UF) PAGA R$ 680 MIL EM SHOW DE FULANO
+- Diz o fato: quem pagou, quanto, por quê. Ex.: PREFEITURA DE X (UF) CONTRATA SHOW DE FULANO POR R$ 680 MIL
 - Use o valor EXATAMENTE como vem em "valor_manchete". Não escreva nenhum outro valor em R$.
 - Se o órgão for "MUNICIPIO DE X", chame de "PREFEITURA DE X".
 - Nome de artista só se estiver escrito no objeto do contrato. Se não estiver, diga "SHOW".
@@ -71,7 +71,8 @@ def _manchete_padrao(f):
     uf = f" ({f['uf']})" if f["uf"] and orgao.startswith("PREFEITURA") else ""
     tipo = "SHOW E ESTRUTURA" if f["inclui_estrutura"] else "SHOW"
     de = f" DE {f['artista'].upper()}" if f.get("artista") else ""
-    return f"{orgao}{uf} PAGA {f['valor_manchete']} EM {tipo}{de}"
+    # contrato assinado não é pagamento: "CONTRATA", nunca "PAGA"
+    return f"{orgao}{uf} CONTRATA {tipo}{de} POR {f['valor_manchete']}"
 
 
 def _linha_fato(f):

@@ -13,7 +13,7 @@ MIDIA_MIN = 300_000
 INUSITADAS = {
     "LAGOSTA": r"lagosta", "CAMARÃO": r"camar[ãa]o", "VINHO": r"\bvinhos?\b", "ESPUMANTE": r"espumante|champanhe",
     "UÍSQUE": r"whisk(e)?y|u[íi]sque", "CAVIAR": r"caviar", "PICANHA": r"picanha", "FILÉ MIGNON": r"fil[ée] mignon",
-    "BACALHAU": r"bacalhau", "JOIAS": r"\bjoias?\b", "CARRO BLINDADO": r"blindad", "HELICÓPTERO": r"helic[óo]ptero",
+    "BACALHAU": r"bacalhau", "JOIAS": r"\bjoias?\b", "CARRO BLINDADO": r"(ve[íi]culo|carro|autom[óo]vel|caminhonete|suv)s? blindad", "HELICÓPTERO": r"helic[óo]ptero",
     "IATE": r"\biate\b", "JATINHO": r"jatinho|aeronave executiva",
 }
 INUSITADA_MIN = 20_000
