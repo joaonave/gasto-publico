@@ -99,6 +99,7 @@ def fatos(c):
         "valor_exato": valor_exato(v),
         "data_assinatura": "/".join(reversed(data.split("-"))) if data else "",
         "link": link_contrato(c),
+        "compra": c.get("numeroControlePncpCompra") or "",
         "inclui_estrutura": bool(_ESTRUTURA.search(c.get("objetoContrato") or "")),
         "artista": artista(c.get("objetoContrato"), c.get("nomeRazaoSocialFornecedor")),
     }

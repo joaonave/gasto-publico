@@ -45,7 +45,7 @@ def selecionar(contratos):
             for item, rx in INUSITADAS.items():
                 if re.search(rx, obj, re.IGNORECASE):
                     f = fatos_base(c)
-                    f.update(tipo="inusitada",
+                    f.update(tipo="inusitada", item=item, item_rx=rx,
                              manchete_padrao=f"CONTRATO DE {valor_manchete(v)} DA {_orgao(f)} INCLUI {item}",
                              contexto=f"Contrato cujo objeto inclui {item.lower()}.")
                     saida.append(f)

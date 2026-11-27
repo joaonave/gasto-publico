@@ -91,7 +91,8 @@ def _caber(dados, sufixo=""):
         if fonte in linhas and not any(l.startswith(("🚽", "💩", "🚱")) or "Dinamarca" in l or "esgoto na rede" in l
                                        for l in linhas):
             linhas.remove(fonte)
-    return "\n".join(linhas) if len(linhas) > 1 else ""
+    so_cabecalho = len(linhas) == 1 and linhas[0].startswith("📊")
+    return "" if not linhas or so_cabecalho else "\n".join(linhas)
 
 
 def agendar(posts):

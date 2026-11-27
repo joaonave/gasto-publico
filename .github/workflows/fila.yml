@@ -20,13 +20,19 @@ jobs:
           mkdir -p dados/diag
           T="${{ inputs.apagar }}"; [ -z "$T" ] && [ -f dados/apagar.txt ] && T="$(cat dados/apagar.txt)"; case "$T" in apagar:??????????*) python -m robo.fila --apagar "${T#apagar:}" > dados/diag/fila.txt 2>&1 || true;; esac
           python -m robo.fila --listar >> dados/diag/fila.txt 2>&1 || true
-          sudo apt-get -qq install -y tesseract-ocr tesseract-ocr-por poppler-utils > /dev/null 2>&1 || true
-          { for n in 3 2; do
-              curl -s -m 120 -o /tmp/a$n.pdf "https://pncp.gov.br/pncp-api/v1/orgaos/46523130000100/compras/2026/246/arquivos/$n"
-              pdftoppm -r 200 -png /tmp/a$n.pdf /tmp/p$n
-              echo "===== arquivo $n"
-              for img in /tmp/p$n*.png; do tesseract "$img" - -l por 2>/dev/null; done
-            done; } > dados/diag/docs.txt 2>&1 || true
+          python - > dados/diag/itens.txt 2>&1 <<'PY' || true
+          import requests
+          from robo import config, itens
+          r = requests.get(config.PNCP_BASE, params={"dataInicial": "20261126", "dataFinal": "20261126", "pagina": 1, "tamanhoPagina": 10}, timeout=60)
+          d = r.json()["data"]
+          print("chaves:", sorted(d[0].keys()))
+          for c in d[:4]:
+              ctl = c.get("numeroControlePncpCompra")
+              its = itens.buscar(ctl)
+              print("==", ctl, "|", (c.get("objetoContrato") or "")[:70], "| itens:", None if its is None else len(its))
+              for i in (its or [])[:2]: print("   ", i.get("descricao", "")[:70], i.get("quantidade"), i.get("unidadeMedida"), i.get("valorUnitarioEstimado"))
+          its = itens.buscar("46523130000100-1-000246/2026"); print("itapecerica:", its and its[0].get("descricao"))
+          PY
           python - > dados/diag/ranking.txt 2>&1 <<'PY' || true
           from collections import defaultdict
           from robo import emendas, emendas_portal

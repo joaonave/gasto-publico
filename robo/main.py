@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import card, cota, homicidios, municipio, noticias, pix, qa, ranking, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
+from . import card, cota, homicidios, itens, municipio, noticias, pix, qa, ranking, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -166,19 +166,34 @@ def executar(data=None):
                     if "esgoto" in d:
                         f["sem_esgoto"] = round(100 - d["esgoto"], 1)
         log.append(f"Emenda Pix: {len(idx)} cidades com Pix em 12 meses | {com_pix} contratos de prefeitura que recebeu Pix")
-    escolhidos = pontos.escolher(candidatos, estado, hoje, pop)
-    log += ["", f"Candidatos: {len(candidatos)} | escolhidos pelo sistema de pontos: {len(escolhidos)} "
-                f"(já publicados hoje: {estado.get('pub_qtd', 0)})", ""]
-
+    # escolhe, revisa (QA + itens do contrato) e, se algum cair, escolhe de novo para não perder a vaga
     aprovados, segurados, manchetes = [], [], set(estado.get("manchetes_dia", {}).get(hoje, []))
-    for f in list(escolhidos):
-        motivos = qa.revisar(f, manchetes)
-        if motivos:
-            segurados.append((f, motivos))
-            escolhidos.remove(f)
-            continue
-        manchetes.add(f.get("manchete_padrao") or "")
+    restantes, escolhidos = list(candidatos), []
+    for _ in range(6):
+        novos = [f for f in pontos.escolher(restantes, estado, hoje, pop) if f not in escolhidos]
+        if not novos:
+            break
+        caiu = False
+        for f in novos:
+            motivos = qa.revisar(f, manchetes)
+            if not motivos:
+                ok, motivo, item = itens.verificar(f)
+                if ok:
+                    f["item_confirmado"] = item
+                else:
+                    motivos = [motivo]
+            if motivos:
+                segurados.append((f, motivos))
+                restantes.remove(f)
+                caiu = True
+                continue
+            manchetes.add(f.get("manchete_padrao") or "")
+            escolhidos.append(f)
+        if not caiu:
+            break
     estado["manchetes_dia"] = {hoje: sorted(manchetes)}
+    log += ["", f"Candidatos: {len(candidatos)} | escolhidos e conferidos: {len(escolhidos)} | segurados: {len(segurados)} "
+                f"(já publicados hoje: {estado.get('pub_qtd', 0)})", ""]
     if segurados:
         log += ["## Segurados pelo QA (não publicados)"] + [
             f"- {f.get('manchete_padrao') or f.get('orgao')} → {'; '.join(m)}" for f, m in segurados] + [""]
@@ -187,8 +202,10 @@ def executar(data=None):
         # dados da cidade só quando o post é sobre a cidade: órgão municipal (PNCP) ou destino de emenda
         local = str(f.get("tipo", "")).startswith("emenda") or re.search(r"munic|prefeit", f.get("orgao") or "", re.IGNORECASE)
         cod = pop.cod(f) if local else ""
-        post["dados_municipio"] = municipio.comentario(
+        cidade = municipio.comentario(
             f, muni.dados(cod), pop.por_cod.get(cod), hom.de(cod), getattr(hom, "anos", "")) if cod else ""
+        # item confirmado do contrato vem primeiro no 1º comentário (o que foi comprado, quanto, a que preço)
+        post["dados_municipio"] = "\n".join(x for x in (itens.linha(f.get("item_confirmado")), cidade) if x)
         status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
         hab = f" | R$/hab {f['por_habitante']:.2f}" if f.get("por_habitante") else ""
         log += [f"## {status} | {f.get('tipo')} | nota {f['nota']}{hab} | tags {post['variante_tag']}",
