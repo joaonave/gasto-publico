@@ -20,6 +20,7 @@ jobs:
           mkdir -p dados/diag
           T="${{ inputs.apagar }}"; [ -z "$T" ] && [ -f dados/apagar.txt ] && T="$(cat dados/apagar.txt)"; case "$T" in apagar:??????????*) python -m robo.fila --apagar "${T#apagar:}" > dados/diag/fila.txt 2>&1 || true;; esac
           python -m robo.fila --listar >> dados/diag/fila.txt 2>&1 || true
+          python -m robo.noticias > dados/diag/noticias.txt 2>&1 || true
           python -m robo.fila --metricas > dados/diag/metricas.json 2> dados/diag/metricas_erro.txt || true
           python -c "from pathlib import Path; from robo import municipio as m; M=m.Municipios(Path('/tmp/x.json')); [print(c, M.dados(c), m.comentario({'municipio':n,'uf':u}, M.dados(c)), sep='\n') for c,n,u in (('2110302','Santo Antônio dos Lopes','MA'),('3106200','Belo Horizonte','MG'))]" > dados/diag/municipio.txt 2>&1 || true
       - run: |
