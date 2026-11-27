@@ -248,6 +248,6 @@ def montar(f, pedir_comentario):
         erros.append(f"post com {tamanho} caracteres")
     corpo_sem_link = f"{manchete}\n\n{embaixo}\n\n{_hashtags(f)}".strip()
     return {"texto": post, "corpo_sem_link": corpo_sem_link, "link": f["link"],
-            "variante_link": "resposta" if sum(map(ord, str(f.get("id", "")))) % 2 else "post",
+            "variante_link": "resposta",  # link no post zera o alcance de conta sem Premium (Buffer, 18,8 mi posts)
             "erros": erros, "origem": origem, "comentario": bool(comentario),
             "variante_tag": _variante(f)}
