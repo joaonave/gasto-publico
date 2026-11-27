@@ -118,7 +118,8 @@ def agendar(posts):
             p2 = dict(post, texto_final=post["texto"], resposta=_caber(dados))
             tentativas += [(p2, True, True), (p2, False, True)]
         p1 = dict(post, texto_final=post["texto"], resposta=None)
-        tentativas += [(p1, True, False), (p1, False, False)]
+        if _tam_x(post["texto"]) <= 280:  # reserva (link no post) só se couber; senão o Buffer recusa
+            tentativas += [(p1, True, False), (p1, False, False)]
         res = "erro"
         for p, img, th in tentativas:
             try:

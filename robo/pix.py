@@ -8,7 +8,7 @@ import unicodedata
 from datetime import datetime
 
 MESES = "janeiro fevereiro março abril maio junho julho agosto setembro outubro novembro dezembro".split()
-JANELA_MESES = 12
+JANELA_MESES = 11  # mês atual + 11 anteriores = 12 meses
 PIX_MIN = 100_000
 
 
@@ -44,8 +44,8 @@ def indice(linhas, hoje=None):
 def anexar(f, idx, cadastro):
     """Anexa ao fato do PNCP o maior Pix recebido pela cidade nos últimos 12 meses (se houver)."""
     from .emendas import norm
-    if not re.search(r"munic|prefeit", f.get("orgao") or "", re.IGNORECASE):
-        return
+    if not re.match(r"^(MUNIC[IÍ]PIO|PREFEITURA)( MUNICIPAL)? D[EOA]S? ", (f.get("orgao") or "").upper()):
+        return  # só prefeitura: câmara/consórcio não recebem a emenda Pix
     autores = idx.get((_n(f.get("municipio")), f.get("uf")))
     if not autores:
         return

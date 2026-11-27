@@ -44,8 +44,13 @@ def pendente(p):
     return str(p.get("status", "")).lower() in ("scheduled", "draft", "needs_approval", "queued", "pending")
 
 
+CORTE = "2026-11-27T21:00:00Z"  # posts criados antes disso vieram de versões com regras antigas
+
+
 def antigo(p):
-    return pendente(p) and MARCA not in (p.get("text") or "")
+    """Pendente de versão antiga: criado antes do corte e sem a marca. Post novo sem hashtag não é apagado."""
+    criado = p.get("createdAt") or ""
+    return pendente(p) and MARCA not in (p.get("text") or "") and (not criado or criado < CORTE)
 
 
 def limpar(apagar=True):

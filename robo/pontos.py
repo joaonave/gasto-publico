@@ -133,7 +133,9 @@ def escolher(candidatos, estado, hoje, pop):
     for f in sorted(candidatos, key=lambda f: (-f["nota"], -f["valor"])):
         if estado["pub_qtd"] + len(escolhidos) >= TETO_DIA:
             break
-        if f not in escolhidos and f["nota"] > 0 and LIMITE_DIA.get(categoria(f), 2) > 0:
+        cat = categoria(f)
+        ja = usados.get(cat, 0) + sum(1 for e in escolhidos if categoria(e) == cat)
+        if f not in escolhidos and f["nota"] > 0 and ja < 2 * LIMITE_DIA.get(cat, 2):  # completa, até o dobro do limite
             escolhidos.append(f)
     # intercala categorias na ordem de publicação
     fila, restantes = [], list(escolhidos)

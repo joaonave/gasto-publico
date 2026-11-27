@@ -44,7 +44,7 @@ _ASPAS = re.compile(r'[“"«]([^”"»]{3,60})[”"»]')
 _GENERICOS = re.compile(r"\b(LTDA|ME|EPP|EIRELI|S/?A|PRODU[CÇ][OÕ]ES|PRODU[CÇ][AÃ]O|ARTISTIC[AO]S?|ART[IÍ]STIC[AO]S?|"
                         r"MUSICA[LIS]*|EVENTOS?|SHOWS?|EDITORA|ADMINISTRADORA|PROMO[CÇ][OÕ]ES|ENTRETENIMENTO|"
                         r"EMPREENDIMENTOS|COMUNICA[CÇ][AÃ]O|SERVI[CÇ]OS|AGENCIA|AG[EÊ]NCIA|PRODUTORA|GRAVADORA|"
-                        r"ART[IÍ]ST|[0-9.\-/]+)\b", re.IGNORECASE)
+                        r"ART[IÍ]ST|FONOGR[AÁ]FIC[AO]S?|[0-9.\-/]+)\b", re.IGNORECASE)
 _CONECTORES = {"OS", "AS", "O", "A", "E", "DE", "DO", "DA", "DOS", "DAS", "&"}
 
 
@@ -53,21 +53,60 @@ def _sem_acento(t):
     return unicodedata.normalize("NFKD", t or "").encode("ascii", "ignore").decode().upper()
 
 
-# "do artista DJ Alok, representado..." / "da banda Roupa Nova" / "do cantor X"
+# palavra que encerra o nome do artista ("show do cantor TIERRY NO EVENTO..." → "TIERRY")
+_PARA = {"NO", "NA", "NOS", "NAS", "PARA", "EM", "DIA", "DIAS", "PREVISTO", "PREVISTA", "DURANTE", "AO", "AOS", "A",
+         "COM", "REALIZADO", "REALIZADA", "REALIZAR", "EVENTO", "FESTA", "FESTEJOS", "FESTIVIDADES", "ANIVERSARIO",
+         "CARNAVAL", "REVEILLON", "NATAL", "PROGRAMACAO", "EMANCIPACAO", "MUNICIPIO", "CIDADE", "VALOR", "REFERENTE",
+         "CONFORME", "SEGUNDO", "QUE", "SENDO", "REPRESENTADO", "REPRESENTADA", "POR", "ATRAVES", "VIA", "COMO",
+         "SHOW", "SHOWS", "APRESENTACAO", "OBJETO", "LOCAL", "PRACA", "PARQUE", "ESTADIO", "AVENIDA", "RUA"}
+_CONECT_FIM = {"E", "&", "DE", "DA", "DO", "DOS", "DAS", "A", "O"}
+# fornecedor cujo "nome próprio" é palavra comum de evento: não serve como nome de artista
+_FORNECEDOR_COMUM = re.compile(r"^(S[AÃ]O JO[AÃ]O|CIDADE|CARNAVAL|NATAL|FESTA|FESTAS|BRASIL|NORDESTE|REGIONAL|"
+                               r"MUNICIPAL|NACIONAL|CULTURA|CULTURAL|ARTE|ARTES|SOM|LUZ|PALCO|MIX|TOP|MAIS|REAL|NOVA|"
+                               r"NOVO|GRUPO|BANDA|SHOW|VIP|PREMIUM|PRIME)$", re.IGNORECASE)
+
+# prefixo em qualquer caixa; o nome tem que começar com maiúscula
 _NOMEADO = re.compile(
-    r"\b(?:d[oa]s?|pel[oa]s?)\s+(?:artistas?|cantor(?:a|es)?|bandas?|grupos?(?: musical)?|duplas?(?: sertanejas?)?|mc)\s+"
-    r"((?:DJ |MC )?[A-ZÀ-Ý0-9][\wÀ-ÿ'&.]*(?:\s+(?:[A-ZÀ-Ý0-9&][\wÀ-ÿ'&.]*|e|&|de|da|do|dos|das))*)")
+    r"(?i:\b(?:d[oa]s?|pel[oa]s?|com\s+[oa]s?|com)\s+(?:artistas?|cantor(?:a|es|as)?|bandas?|grupos?(?: musical)?|"
+    r"duplas?(?: sertanejas?)?|mc|dj)\s+)"
+    r"((?:DJ |MC |Dj |Mc )?[A-ZÀ-Ý0-9][\wÀ-ÿ'&]*(?:\s+(?:[A-ZÀ-Ý0-9&][\wÀ-ÿ'&]*|e|&|de|da|do|dos|das))*)")
+# antes das aspas tem que vir cantor/banda/artista/show ("evento “Carnaval 2027”" não é artista)
+_ASPAS_ARTISTA = re.compile(r"(?i:(?:artistas?|cantor(?:a|es|as)?|bandas?|grupos?|duplas?(?: sertanejas?)?|mc|dj|"
+                            r"show(?: musical)?(?: d[oa]s?)?|apresenta[çc][ãa]o(?: musical| art[íi]stica)?(?: d[oa]s?)?)"
+                            r"\s*[:\-]?\s*)[“\"«]([^”\"»]{3,60})[”\"»]")
+# vários artistas num contrato só: não dá para pôr um nome na manchete
+_VARIOS = re.compile(r"(?i:\b(?:d[oa]s|pel[oa]s)\s+(?:artistas|bandas|cantor(?:es|as)|duplas|atra[çc][õo]es)\b)|"
+                     r"(?i:\b(?:cantor(?:a)?|banda|artista|dupla)\b[^.;]{3,60}\be\s+(?:d[oa]|[oa])\s+(?:cantor(?:a)?|banda|artista|dupla)\b)")
+
+
+def _limpar_nome(nome):
+    nome = re.sub(r"(?i)\s+(?:e|&)\s+(?:sua\s+)?banda\b.*$", "", nome)  # "GUSTTAVO LIMA E BANDA" → "GUSTTAVO LIMA"
+    toks = nome.replace(",", " , ").split()
+    out = []
+    for t in toks:
+        if t == "," or _sem_acento(t) in _PARA:
+            break
+        out.append(t)
+    while out and _sem_acento(out[-1]) in _CONECT_FIM:
+        out.pop()
+    return " ".join(out).strip(" -–'\"")
 
 
 def artista(objeto, fornecedor=""):
-    """Nome do artista: entre aspas no contrato; ou nomeado após "do artista/da banda/do cantor";
-    ou o nome próprio do fornecedor, se ele aparece no objeto."""
-    m = _ASPAS.search(objeto or "")
+    """Nome do artista. Ordem: entre aspas logo depois de cantor/banda/artista/show; nomeado após
+    "do artista/da banda/do cantor"; nome próprio do fornecedor que aparece inteiro no objeto.
+    Vários artistas no mesmo contrato: "" (manchete sem nome)."""
+    obj = objeto or ""
+    if _VARIOS.search(obj):
+        return ""
+    m = _ASPAS_ARTISTA.search(obj)
     if m:
-        return m.group(1).strip()
-    m = _NOMEADO.search(objeto or "")
+        nome = _limpar_nome(m.group(1).strip())
+        if len(nome) >= 3:
+            return nome
+    m = _NOMEADO.search(obj)
     if m:
-        nome = re.sub(r"\s+(?:e|&|de|da|do|dos|das)$", "", m.group(1).strip())
+        nome = _limpar_nome(m.group(1).strip())
         if len(nome) >= 3 and not re.match(r"(?i)(?:para|com|em|no|na|local|regional|nacional)\b", nome):
             return nome
     palavras = _GENERICOS.sub(" ", fornecedor or "").split()
@@ -76,7 +115,8 @@ def artista(objeto, fornecedor=""):
     while palavras and palavras[-1].upper() in _CONECTORES:
         palavras.pop()
     nucleo = " ".join(palavras)
-    if len(nucleo) >= 4 and _sem_acento(nucleo) in _sem_acento(objeto):
+    if len(nucleo) >= 4 and not _FORNECEDOR_COMUM.match(nucleo) and \
+            re.search(r"\b" + re.escape(_sem_acento(nucleo)) + r"\b", _sem_acento(obj)):
         return nucleo.title()
     return ""
 

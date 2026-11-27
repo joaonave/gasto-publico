@@ -42,6 +42,10 @@ def _candidatos_pncp(data, estado, log):
     return c
 
 
+def _chave_show(f):
+    return f"{f.get('orgao', '')}|{(f.get('artista') or '').upper()}|{round(f.get('valor') or 0, -3):.0f}"
+
+
 _CTX = {}  # emendas baixadas na rodada (usadas também no cruzamento Pix × prefeitura)
 
 
@@ -175,7 +179,11 @@ def executar(data=None):
             break
         caiu = False
         for f in novos:
+            if not f.get("manchete_padrao") and f.get("tipo") == "show":
+                f["manchete_padrao"] = redacao._manchete_padrao(f)  # deduplicação e card usam a manchete
             motivos = qa.revisar(f, manchetes)
+            if f.get("tipo") == "show" and _chave_show(f) in set(estado.get("shows_vistos", [])):
+                motivos = (motivos or []) + ["mesmo show (órgão, artista, valor) já publicado"]
             if not motivos:
                 ok, motivo, item = itens.verificar(f)
                 if ok:
@@ -242,6 +250,8 @@ def executar(data=None):
         pontos.registrar(estado, publicados)
         log += ["", f"{len(aprovados)} posts prontos para o Buffer (resultado abaixo)."]
         for f in publicados:
+            if f.get("tipo") == "show":
+                estado.setdefault("shows_vistos", []).append(_chave_show(f))
             estado["vistos"].append(f["id"])
             estado["vistos"].extend(f.get("ids_extras", []))
             if f.get("tipo") == "ranking":
@@ -250,11 +260,10 @@ def executar(data=None):
                 estado["raiox_dia"] = hoje
                 estado.setdefault("raiox_feitos", {})[f.get("chave", f["id"])] = hoje
 
-    # tudo que foi avaliado hoje não volta amanhã
-    for f in candidatos:
-        if f.get("tipo") != "raiox":
-            estado["vistos"].append(f["id"])
-            estado["vistos"].extend(f.get("ids_extras", []))
+    # segurados (QA/itens) não voltam; os não escolhidos continuam valendo nos próximos dias (até 90 dias)
+    for f, _ in segurados:
+        estado["vistos"].append(f["id"])
+        estado["vistos"].extend(f.get("ids_extras", []))
 
     estado["ultima_rodada"] = hoje
     SAIDA.mkdir(exist_ok=True)

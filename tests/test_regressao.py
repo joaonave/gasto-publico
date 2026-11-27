@@ -195,3 +195,97 @@ def test_post_de_formato_antigo_na_fila_e_removido():
     assert fila.antigo({"status": "scheduled", "text": "PREFEITURA X PAGA R$ 1 MI EM SHOW\n#política"})
     assert not fila.antigo({"status": "scheduled", "text": "X CONTRATA SHOW\n#GastoPublico"})
     assert not fila.antigo({"status": "sent", "text": "antigo sem marca"})
+
+
+# ---------- revisão independente (27/11) ----------
+
+@pytest.mark.parametrize("obj,forn,esperado", [
+    ("show do cantor Wesley Safadão para o evento “Carnaval 2027”", "", "Wesley Safadão"),
+    ("internet banda larga para o programa “Conecta Escola”", "", ""),
+    ("festejos de São João com atrações", "SAO JOAO EVENTOS LTDA", ""),
+    ("Festa da Cidade com show", "CIDADE EVENTOS LTDA", ""),
+    ("show do cantor TIERRY NO EVENTO DO ANIVERSÁRIO DE 50 ANOS DO MUNICÍPIO", "", "TIERRY"),
+    ("APRESENTAÇÃO MUSICAL DO ARTISTA GUSTTAVO LIMA E BANDA, PARA O ANIVERSÁRIO", "", "GUSTTAVO LIMA"),
+    ("show da banda Roupa Nova e do cantor Zé Neto", "", ""),
+    ("Show do cantor Xand Avião. Valor: R$ 500 mil", "", "Xand Avião"),
+    ("shows das bandas Calcinha Preta, Mastruz com Leite e Limão com Mel", "", ""),
+    ("SHOW ARTÍSTICO COM A DUPLA “DIEGO E ARNALDO”, ARTISTAS DE RENOME NACIONAL", "", "DIEGO E ARNALDO"),
+])
+def test_artista(obj, forn, esperado):
+    assert shows.artista(obj, forn) == esperado
+
+
+@pytest.mark.parametrize("obj", ["Contratação de internet banda larga", "Show pirotécnico de fogos no réveillon",
+                                 "Uniformes para banda marcial", "Cachê para palestrantes do seminário"])
+def test_falsos_shows(obj):
+    assert "show" not in tipos(obj)
+
+
+def test_aviso_de_licitacao_nao_e_publicidade():
+    assert "midia" not in tipos("Veiculação de avisos de licitação em jornais de grande circulação", valor=400_000)
+
+
+@pytest.mark.parametrize("obj", ["Gêneros alimentícios: vinagre de vinho, camarão seco", "Detergente neutro espumante",
+                                 "Locação de helicóptero para transporte aeromédico", "Cadeiras cor vinho para o auditório"])
+def test_falsas_inusitadas(obj):
+    assert "inusitada" not in tipos(obj, valor=300_000)
+
+
+def test_pix_fala_dos_12_meses_nao_de_um_mes():
+    f = dict(_show(), pix={"autor": "Dep. Fulano (PX-BA)", "total": 500_000, "mes": "202605"}, sem_esgoto=71)
+    t = redacao._linha_pix(f)
+    assert "últimos 12 meses" in t and "maio" not in t and "sem finalidade" not in t
+
+
+def test_camara_municipal_nao_e_prefeitura():
+    assert not redacao.eh_prefeitura("CAMARA MUNICIPAL DE PARANAIBA")
+    assert not redacao.eh_prefeitura("CONSORCIO INTERMUNICIPAL DE SAUDE")
+    assert redacao.eh_prefeitura("MUNICIPIO DE SERTAOZINHO") and redacao.eh_prefeitura("PREFEITURA MUNICIPAL DE X")
+    f = dict(_show(), tipo="midia", orgao="CAMARA MUNICIPAL DE X", por_habitante=50)
+    assert redacao._ingresso(f) == ""
+
+
+def test_comentario_de_show_nao_fala_de_prefeitura_quando_nao_e():
+    for i in range(40):
+        f = dict(_show(), orgao="GOVERNO DO ESTADO DE X", id=f"id{i}")
+        assert "prefeitura" not in redacao._comentario_banco(f).lower()
+
+
+def test_manchete_com_paga_e_bloqueada():
+    f = _show()
+    assert redacao.checar(f, "PREFEITURA DE X (MG) PAGA R$ 500 MIL EM SHOW DE FULANO", "")
+
+
+def test_bancos_sem_pagou():
+    for frases in list(redacao.COMENTARIOS.values()) + list(redacao.INGRESSO.values()):
+        for fr in frases:
+            assert not re.search(r"\bpagou\b|paga a entrada|j[áa] pag", fr, re.IGNORECASE), fr
+
+
+def test_sem_dono_e_so_bancada_comissao_relator():
+    cad = {f"P{i}": {"nome": "X", "cargo": "Dep.", "partido": "PL", "uf": "MG"} for i in range(5)}
+    linhas = [{"autor": "P1", "ano_mes": "202606", "pago": 1e6, "tipo": "Emenda Individual"},
+              {"autor": "EX DEPUTADO FORA DO CADASTRO", "ano_mes": "202606", "pago": 5e9, "tipo": "Emenda Individual"},
+              {"autor": "BANCADA DE MG", "ano_mes": "202606", "pago": 2e9, "tipo": "Emenda de Bancada"}]
+    _, _, sem_dono, _ = ranking._somas(linhas, cad, "2026")
+    assert sem_dono == 2e9
+
+
+def test_homicidio_cidade_pequena_nao_aparece():
+    t = municipio.comentario({"municipio": "Vilarejo", "uf": "MG", "tipo": "show", "id": "a"}, {}, 2000,
+                             (83.0, 4.0, 5), "2022–2024")
+    assert "🔪" not in t
+
+
+def test_ironia_sem_causalidade():
+    for frases in municipio.IRONIA.values():
+        for fr in frases:
+            assert not re.search(r"sobr|resolvid|prioridade", fr, re.IGNORECASE), fr
+
+
+def test_post_novo_sem_hashtag_nao_e_apagado_da_fila():
+    assert not fila.antigo({"status": "scheduled", "text": "X CONTRATA SHOW", "createdAt": "2026-12-01T10:00:00Z"})
+
+
+def test_valor_da_manchete_do_ranking():
+    assert ranking._vm(300_000) == "R$ 300 MIL" and ranking._vm(1.5e6) == "R$ 1,5 MILHÃO"

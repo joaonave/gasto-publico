@@ -1,8 +1,9 @@
 """Ranking diário de emendas pagas no ano (Portal da Transparência), em rodízio:
 deputados, senadores, partido, UF, emenda Pix e emendas "sem dono" (bancada/comissão/relator).
 """
+import re
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from .emendas import norm
 
@@ -19,13 +20,20 @@ def _v(x):
 
 
 def _vm(x):
-    """Valor da manchete (bilhões ou milhões)."""
+    """Valor da manchete: mil, milhão/milhões, bilhão/bilhões."""
     if x >= 1e9:
-        return f"R$ {x / 1e9:.1f} BILHÕES".replace(".", ",")
-    return f"R$ {x / 1e6:.1f} MILHÕES".replace(".", ",")
+        return f"R$ {x / 1e9:.1f} {'BILHÃO' if x < 2e9 else 'BILHÕES'}".replace(".", ",")
+    if x >= 1e6:
+        return f"R$ {x / 1e6:.1f} {'MILHÃO' if x < 2e6 else 'MILHÕES'}".replace(".", ",")
+    return f"R$ {x / 1e3:.0f} MIL"
+
+
+_COLETIVA = re.compile(r"bancada|comiss|relator", re.IGNORECASE)
 
 
 def _somas(linhas, cadastro, ano):
+    """pago/pix por parlamentar do cadastro; 'sem dono' = emendas coletivas (bancada, comissão, relator) pelo tipo
+    ou autor. Emenda individual de ex-parlamentar/licenciado fica fora das duas contas."""
     pago, pix, sem_dono, total = defaultdict(float), defaultdict(float), 0.0, 0.0
     for r in linhas:
         if not str(r.get("ano_mes") or "").startswith(ano):
@@ -33,12 +41,12 @@ def _somas(linhas, cadastro, ano):
         v = r.get("pago") or 0
         total += v
         k = norm(r["autor"])
-        if k in cadastro:
+        if _COLETIVA.search(r.get("tipo") or "") or _COLETIVA.search(r.get("autor") or ""):
+            sem_dono += v
+        elif k in cadastro:
             pago[k] += v
             if r.get("tipo") == PIX:
                 pix[k] += v
-        else:
-            sem_dono += v
     return pago, pix, sem_dono, total
 
 
@@ -47,7 +55,10 @@ def _quem(c):
 
 
 def fato(variante, linhas, cadastro, ano=None):
-    ano = ano or str(datetime.now().year)
+    agora = datetime.now(timezone(timedelta(hours=-3)))  # Brasília
+    ano = ano or str(agora.year)
+    if ano == str(agora.year) and agora.month < 2:
+        return None  # janeiro: quase nenhum pagamento no ano ainda
     pago, pix, sem_dono, total = _somas(linhas, cadastro, ano)
     if not pago:
         return None
@@ -85,12 +96,14 @@ def fato(variante, linhas, cadastro, ano=None):
         nome = "PARTIDO" if variante == "partido" else "ESTADO"
         manchete = f"EMENDAS PAGAS EM {ano} POR {nome}: {media[0][0]} LIDERA COM {_vm(media[0][1])} POR PARLAMENTAR"
         corpo = (lista(media[:4], lambda x, v: f"{x} {_v(v)}") +
-                 f"\n…\nÚltimo: {media[-1][0]}, {_v(media[-1][1])}\n(média por parlamentar)")
+                 f"\n…\nÚltimo: {media[-1][0]}, {_v(media[-1][1])}\n(média por parlamentar; com 3+ parlamentares)")
         valor = media[0][1]
     else:  # sem_dono
-        manchete = f"{_vm(sem_dono)} EM EMENDAS PAGAS EM {ano} NÃO TÊM NOME DE PARLAMENTAR"
-        corpo = (f"São emendas de bancada, comissão e relator: {round(100 * sem_dono / total)}% de tudo que foi pago.\n"
-                 f"Com nome e sobrenome: R$ {_v(total - sem_dono)}.")
+        if not sem_dono:
+            return None
+        manchete = f"{_vm(sem_dono)} EM EMENDAS DE BANCADA, COMISSÃO E RELATOR PAGAS EM {ano}: SEM NOME DE PARLAMENTAR NO PORTAL"
+        corpo = (f"São {round(100 * sem_dono / total)}% de todas as emendas pagas no ano.\n"
+                 f"Emendas individuais, com nome e sobrenome: R$ {_v(sum(pago.values()))}.")
         valor = sem_dono
     # lista encurta (4 → 3 → 2 nomes) até o post caber em 280 com folga
     def cabe(t):
@@ -101,7 +114,7 @@ def fato(variante, linhas, cadastro, ano=None):
             linhas_.pop()
         corpo = "\n".join(linhas_)
     comentario = {"deputados": "Seu deputado está na lista?", "senadores": "Seu senador está na lista?",
-                  "pix": "Direto no caixa da prefeitura, sem finalidade definida.",
+                  "pix": "Transferência especial: direto no caixa da prefeitura.",
                   "partido": "E o partido que você vota?", "uf": "E o seu estado, onde ficou?",
                   "sem_dono": "Quem indicou? Boa pergunta."}[variante]
     return dict(base, comentario_fixo=comentario, valor=valor, valor_manchete=_vm(valor), manchete_padrao=manchete, linha_fato=corpo)

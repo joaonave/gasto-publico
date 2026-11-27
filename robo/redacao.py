@@ -7,7 +7,7 @@ import requests
 
 from . import config
 
-ESTILO = """Você escreve posts para o perfil @GastoPublicoBR no X.
+ESTILO = """Você escreve posts para o perfil @ImpostoFoiPra no X.
 Voz: um brasileiro comum, desiludido com o uso do dinheiro público. Cansado, irônico, nunca histérico.
 
 Formato obrigatório (responda só com JSON):
@@ -15,7 +15,7 @@ Formato obrigatório (responda só com JSON):
 
 Regras da manchete:
 - TODA EM CAIXA ALTA, uma frase, sem emoji, até 140 caracteres.
-- Diz o fato: quem pagou, quanto, por quê. Ex.: PREFEITURA DE X (UF) CONTRATA SHOW DE FULANO POR R$ 680 MIL
+- Diz o fato: quem contratou, quanto, para quê. Contrato assinado NÃO é pagamento: nunca use PAGA/PAGOU. Ex.: PREFEITURA DE X (UF) CONTRATA SHOW DE FULANO POR R$ 680 MIL
 - Use o valor EXATAMENTE como vem em "valor_manchete". Não escreva nenhum outro valor em R$.
 - Se o órgão for "MUNICIPIO DE X", chame de "PREFEITURA DE X".
 - Nome de artista só se estiver escrito no objeto do contrato. Se não estiver, diga "SHOW".
@@ -94,6 +94,11 @@ LINKS_OK = ("https://pncp.gov.br/", "https://api.transferegov.gestao.gov.br/",
 PROIBIDAS = re.compile(r"corrup|desvi|roub|superfatur|propina|ladr|crime|fraud", re.IGNORECASE)
 
 
+def _sem_acento(t):
+    import unicodedata
+    return unicodedata.normalize("NFKD", t or "").encode("ascii", "ignore").decode().upper()
+
+
 def checar(f, manchete, comentario):
     """Retorna lista de problemas. Vazia = pode publicar."""
     erros = []
@@ -106,6 +111,10 @@ def checar(f, manchete, comentario):
         erros.append("manchete não está em caixa alta")
     if comentario and re.search(r"\d", comentario):
         erros.append("comentário com número")
+    if f.get("tipo") in ("show", "midia", "inusitada") and re.search(r"\bPAG(A|OU|AR|AM)\b", manchete.upper()):
+        erros.append("contrato não é pagamento: manchete com PAGA")
+    if f.get("tipo") == "show" and f.get("artista") and _sem_acento(f["artista"]) not in _sem_acento(manchete):
+        erros.append("manchete sem o artista do contrato")
     if PROIBIDAS.search(manchete + " " + comentario):
         erros.append("palavra proibida (acusação)")
     if not f["link"].startswith(LINKS_OK):
@@ -119,14 +128,14 @@ COMENTARIOS = {
              "E ainda tem quem reclame do buraco na rua.", "Na hora de pagar professor, falta verba.",
              "Depois do show, a fila do posto continua lá.", "Pelo menos a música é boa. Dizem.",
              "O orçamento aperta. O palco, nunca.", "Cultura é importante. A conta também.",
-             "Quem paga a entrada é você, mesmo sem ir.", "Na sua cidade também é assim?",
-             "Você iria nesse show sabendo que já pagou?", "Quanto custou o último show na sua cidade?"],
+             "A conta da entrada é sua, mesmo sem ir.", "Na sua cidade também é assim?",
+             "Você iria nesse show sabendo que a conta é sua?", "Quanto custou o último show na sua cidade?"],
     "midia": ["Fazer é caro. Contar que fez, mais ainda.", "A propaganda é sempre ótima.",
               "Se não aparecer, não aconteceu.", "A obra pode atrasar. O anúncio, nunca.",
               "Tudo vai muito bem. Pelo menos na propaganda.", "Você já viu essa propaganda por aí?"],
-    "inusitada": ["Tudo pelo bem-estar da população.",
-                  "O cardápio do contribuinte é outro.", "Na sua casa tem isso todo dia?",
-                  "Alguém aí foi convidado?"],
+    "inusitada": ["Tudo pelo bem-estar da população.", "Na sua casa tem isso todo dia?", "Prioridades."],
+    "inusitada_comida": ["O cardápio do contribuinte é outro.", "Na sua casa tem isso todo dia?",
+                         "Alguém aí foi convidado?"],
     "cota": ["Tudo dentro da regra. Esse é o problema.", "Reembolsado com carinho pelo contribuinte.",
              "Mandato dá fome.", "A regra permite. Você paga.", "Trabalho duro exige conforto.",
              "Você pediria reembolso disso no seu trabalho?"],
@@ -139,10 +148,22 @@ COMENTARIOS = {
 }
 
 
+COMIDA = {"LAGOSTA", "CAMARÃO", "VINHO", "ESPUMANTE", "UÍSQUE", "CAVIAR", "PICANHA", "FILÉ MIGNON", "BACALHAU"}
+
+
+def eh_prefeitura(orgao):
+    """Só a prefeitura (não câmara, consórcio, fundo ou instituto municipal)."""
+    return bool(re.match(r"^(MUNIC[IÍ]PIO|PREFEITURA)( MUNICIPAL)? D[EOA]S? ", (orgao or "").upper()))
+
+
 def _comentario_banco(f):
     tipo = f.get("tipo", "show")
-    chave = next((k for k in COMENTARIOS if tipo.startswith(k)), "show")
+    chave = next((k for k in COMENTARIOS if tipo == k), None) or next((k for k in COMENTARIOS if tipo.startswith(k)), "show")
+    if chave == "inusitada" and f.get("item") in COMIDA:
+        chave = "inusitada_comida"
     lista = COMENTARIOS[chave]
+    if not eh_prefeitura(f.get("orgao")):  # frase que fala da prefeitura só quando é a prefeitura
+        lista = [x for x in lista if "prefeitura" not in x.lower()] or lista
     return lista[sum(map(ord, str(f.get("id", "")))) % len(lista)]
 
 
@@ -193,10 +214,10 @@ def _hashtags_locais(f):
 
 # ironia com a conta por morador (valor do contrato ÷ população IBGE)
 INGRESSO = {
-    "show": ["Dá {v} por morador. Até quem ficou em casa pagou o ingresso.",
-             "Saiu {v} o \"ingresso\" de cada morador. Criança e idoso inclusos.",
-             "{v} por habitante. Ingresso caro pra quem nem foi.",
-             "Cada morador pagou {v} pelo show. Foi convidado?"],
+    "show": ["Custa {v} por morador. Até quem fica em casa entra na conta.",
+             "Sai {v} o \"ingresso\" de cada morador. Criança e idoso inclusos.",
+             "{v} por habitante. Ingresso caro pra quem nem vai.",
+             "O show custa {v} por morador. Você foi convidado?"],
     "midia": ["Até {v} por morador em propaganda. Você foi bem informado?",
               "Até {v} de cada morador pra prefeitura falar bem dela mesma."],
     "inusitada": ["{v} de cada morador. Você foi convidado?"],
@@ -208,8 +229,8 @@ def _ingresso(f):
     tipo, ph = f.get("tipo"), f.get("por_habitante")
     if tipo not in INGRESSO or not ph or ph < MIN_POR_HAB[tipo]:
         return ""
-    if not re.search(r"munic|prefeit", f.get("orgao") or "", re.IGNORECASE):
-        return ""  # órgão estadual/federal: dividir pela população da cidade não faz sentido
+    if not eh_prefeitura(f.get("orgao")):
+        return ""  # câmara, consórcio, órgão estadual/federal: dividir pela população da cidade não faz sentido
     v = f"R$ {ph:,.0f}".replace(",", ".") if ph >= 10 else f"R$ {ph:.2f}".replace(".", ",")
     banco = INGRESSO[tipo]
     return banco[sum(map(ord, f.get("id", ""))) % len(banco)].format(v=v)
@@ -225,12 +246,11 @@ def _linha_pix(f):
     p = f.get("pix")
     if not p:
         return ""
-    from datetime import datetime
-    from .pix import mes_extenso
     from .shows import valor_manchete
     v = valor_manchete(p["total"]).replace("MILHÕES", "milhões").replace("MILHÃO", "milhão").replace("MIL", "mil")
-    t = (f"Em {mes_extenso(p['mes'], datetime.now().year)}, a prefeitura recebeu {v} em \"emenda Pix\" "
-         f"do {p['autor']}. Dinheiro sem finalidade definida.")
+    # total de 12 meses (não "em junho"): é a soma da janela
+    t = (f"Nos últimos 12 meses, a prefeitura recebeu {v} em \"emenda Pix\" do {p['autor']}, "
+         f"direto no caixa.")
     if f.get("sem_esgoto", 0) >= 50:
         t += f"\n\nE {f['sem_esgoto']:.0f}% dos moradores seguem sem rede de esgoto."
     return t

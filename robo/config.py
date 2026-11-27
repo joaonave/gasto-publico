@@ -15,7 +15,9 @@ PALAVRAS_SHOW = [
 PALAVRAS_EXCLUIR = [r"patroc[ií]nio", r"boat show", r"auto show", r"show ?room", r"agro ?show",
                     r"restaura[çc]", r"\bobras?\b", r"reforma", r"constru[çc]", r"pavimenta",
                     r"aquisi[çc][ãa]o de", r"material", r"equipamento", r"instrumentos? musica",
-                    r"credenciamento", r"registro de pre[çc]os", r"chamamento"]
+                    r"credenciamento", r"registro de pre[çc]os", r"chamamento",
+                    r"banda larga", r"marcial", r"fanfarra", r"pirot[ée]cn", r"fogos", r"pr[êe]mios", r"palestr",
+                    r"internet", r"fibra [óo]ptica"]
 
 # Objetos que incluem estrutura (palco, som, etc.) não são cachê puro
 PALAVRAS_ESTRUTURA = [r"\bpalco", r"sonoriza", r"ilumina", r"\btenda", r"gerador", r"estrutura"]

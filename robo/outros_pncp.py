@@ -7,7 +7,8 @@ MIDIA = re.compile(r"publicidade|propaganda|veicula[çc][ãa]o|divulga[çc][ãa]
                    r"ag[êe]ncia de (publicidade|propaganda|comunica)|m[íi]dia (digital|impressa|televisiva)|"
                    r"impulsionamento|inser[çc][õo]es (em|na|no) (r[áa]dio|tv|televis)", re.IGNORECASE)
 MIDIA_EXCLUIR = re.compile(r"publica[çc][ãa]o (de|em) (atos|editais|extratos)|di[áa]rio oficial|"
-                           r"imprensa oficial|publica[çc][õo]es legais|diagrama[çc]|publica[çc][ãa]o de textos", re.IGNORECASE)
+                           r"imprensa oficial|publica[çc][õo]es legais|diagrama[çc]|publica[çc][ãa]o de textos|avisos?\b|licita[çc]|"
+                           r"publica[çc][ãa]o legal|editais|balan[çc]o", re.IGNORECASE)
 MIDIA_MIN = 300_000
 
 INUSITADAS = {
@@ -19,7 +20,9 @@ INUSITADAS = {
 INUSITADA_MIN = 20_000
 INUSITADA_EXCLUIR = re.compile(r"seguran[çc]a p[úu]blica|pol[íi]cia|resgate|samu|bombeiro|"
                                r"merenda|alimenta[çc][ãa]o escolar|PNAE|hospital|\bobras?\b|reforma|engenharia|clube|constru[çc]|"
-                               r"passeio|roteiro|tur[íi]stic|excurs|viagem", re.IGNORECASE)  # "Roteiro do Vinho" é passeio, não compra de vinho
+                               r"passeio|roteiro|tur[íi]stic|excurs|viagem|vinagre|cor vinho|vinho \(cor\)|detergente|"
+                               r"aerom[ée]dic|defesa civil|alisadora|brinquedo|g[êe]neros aliment|cesta b[áa]sica|"
+                               r"uniforme|tecido|cadeira|poltrona|tinta", re.IGNORECASE)  # "Roteiro do Vinho" é passeio, não compra de vinho
 
 
 def _orgao(f):

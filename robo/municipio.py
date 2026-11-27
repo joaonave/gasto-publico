@@ -4,6 +4,7 @@ Consulta por município, só para os posts do dia, com cache em dados/municipios
 Tabelas verificadas em 26/11/2026: SIDRA 6909 (água), 7555 (esgoto), IBGE Cidades pesquisa 10111 (IDHM).
 """
 import json
+import re
 from pathlib import Path
 
 import requests
@@ -85,12 +86,11 @@ def _pct(v):
 
 # cidade com infra boa: ironia em vez de número neutro
 IRONIA = {
-    "show": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. Aí sobra pro show.",
-             "Saneamento resolvido ({esg} com esgoto na rede). Agora é festa.",
-             "Infra em dia: {esg} com esgoto na rede. Prioridade agora é o palco."],
-    "midia": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. Falta só contar pra todo mundo.",
-              "Com {esg} de esgoto na rede, o problema agora é a divulgação."],
-    "inusitada": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. Sobrou para o requinte."],
+    # contraste, sem afirmar causa (o dado não diz que a infra "sobrou" para o gasto)
+    "show": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. E tem show.",
+             "Esgoto na rede para {esg} dos moradores. Palco também."],
+    "midia": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. E com propaganda."],
+    "inusitada": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. E com requinte."],
 }
 
 
@@ -101,10 +101,11 @@ def comentario(f, d, populacao=None, hom=None, anos_hom=""):
         return ""
     d = d or {}
     choque = []  # (gravidade, linha)
-    if hom and hom[1] >= 1.5 and hom[2] >= 5:
+    # cidade pequena oscila: exige 15+ óbitos no período e mostra o número absoluto
+    if hom and hom[1] >= 1.5 and hom[2] >= 15:
         vezes = f"{hom[1]:.1f}".replace(".", ",")
-        choque.append((hom[1] * 40, f"🔪 {hom[0]:.0f} homicídios por 100 mil hab. ao ano, {vezes}x a média do país"
-                       f" (DataSUS, {anos_hom})"))
+        choque.append((hom[1] * 40, f"🔪 {hom[2]} homicídios em {anos_hom}: {hom[0]:.0f} por 100 mil hab./ano, "
+                       f"{vezes}x a média do país (DataSUS)"))
     if "esgoto" in d:
         sem = 100 - d["esgoto"]
         if sem >= 20:
@@ -119,7 +120,8 @@ def comentario(f, d, populacao=None, hom=None, anos_hom=""):
     linhas += [l for _, l in sorted(choque, key=lambda x: -x[0])]
     if any("IBGE" not in l and ("🚽" in l or "💩" in l or "🚱" in l) for _, l in choque):
         linhas.append("(IBGE, Censo 2022)")
-    elif not choque and d.get("esgoto", 0) >= 90 and d.get("agua", 0) >= 95 and f.get("tipo") in IRONIA:
+    elif not choque and d.get("esgoto", 0) >= 90 and d.get("agua", 0) >= 95 and f.get("tipo") in IRONIA and \
+            re.match(r"^(MUNIC[IÍ]PIO|PREFEITURA)( MUNICIPAL)? D[EOA]S? ", (f.get("orgao") or "").upper()):
         # ironia só quando a própria prefeitura gastou (show, publicidade, compra); emenda recebida não é gasto dela
         banco = IRONIA[f["tipo"]]
         frase = banco[sum(map(ord, f.get("id", f["municipio"]))) % len(banco)]
