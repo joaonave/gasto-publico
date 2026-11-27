@@ -68,9 +68,9 @@ def _candidatos_emendas(estado, log):
         except Exception as e:  # noqa: BLE001
             citados = {}
             log.append(f"Notícias indisponíveis: {e}")
-        ranking = sorted(citados.items(), key=lambda kv: -len(kv[1]))
-        log.append("Parlamentares no noticiário: " + ", ".join(f"{cadastro[k]['nome']} ({len(v)})" for k, v in ranking[:8]))
-        for chave, lst in ranking:
+        mais_citados = sorted(citados.items(), key=lambda kv: -len(kv[1]))
+        log.append("Parlamentares no noticiário: " + ", ".join(f"{cadastro[k]['nome']} ({len(v)})" for k, v in mais_citados[:8]))
+        for chave, lst in mais_citados:
             if len(c) and sum(1 for f in c if f.get("tipo") == "raiox") >= pontos.LIMITE_DIA["raiox"]:
                 break
             if chave in feitos:
