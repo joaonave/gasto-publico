@@ -86,6 +86,10 @@ def fatos_pagamento(r, cadastro):
     }
 
 
+def _titulo(t):
+    return re.sub(r"\b(De|Da|Do|Das|Dos|E)\b", lambda m: m.group(1).lower(), (t or "").title())
+
+
 def post_raio_x(rx):
     """Raio-X em um post só (o Buffer publica post simples)."""
     sigla = f"{rx['partido']}-{rx['uf']}".strip("-")
@@ -99,7 +103,7 @@ def post_raio_x(rx):
     if ultimo and ultimo != desde:
         linha = f"Só em {ultimo}: {valor_manchete(rx['por_ano'][ultimo])}. "
     if top:
-        linha += f"Maior destino: {re.sub(r'\\b(De|Da|Do|Das|Dos|E)\\b', lambda m: m.group(1).lower(), top['destino'].title())} ({top['uf']}), {valor_manchete(top['valor'])}."
+        linha += f"Maior destino: {_titulo(top['destino'])} ({top['uf']}), {valor_manchete(top['valor'])}."
     if rx["uf"] and pct >= 1:
         linha += f" {pct:.0f}% foi para fora de {rx['uf']}."
     return {
