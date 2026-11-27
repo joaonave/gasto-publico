@@ -1,53 +1,56 @@
-518 manchetes/tendências
+512 manchetes/tendências
  - G1 | Nova reforma da Previdência e ajuste fiscal 'cívico': conheça as posições de Luiz Carlos Trabuco, futuro minis
- - O POVO | Camilo Santana caminha para ser ministro da Casa Civil de Lula - O POVO
  - O GLOBO | Lula consulta Cármen Lúcia sobre nomes de mulheres para vaga no STF - O GLOBO
  - Metrópoles | Alckmin será ministro da Segurança e avalia convidar Gakiya para secretário - Metrópoles
- - Outras Palavras | Cinco hipóteses sobre o “ajuste fiscal” e o futuro - Outras Palavras
+ - Estadão | Piada no Planalto diz que Camilo Santana já é ministro da Casa Civil ‘no horário da Nova Zelândia’ - Estadão
+ - O GLOBO | Jornalista mexicano Humberto Padgett anunciou sua própria morte nas redes sociais: 'O monstro do câncer me ven
  - Poder360 | Cleitinho brinca sobre Lula querer viver 130 anos: “Vou pedir saúde” - Poder360
  - G1 | Após EUA proporem taxar aviões brasileiros, Mauro Vieira oferece apoio à Embraer para buscar novos mercados - 
  - G1 | PM faz operação com mais de 100 agentes no Complexo da Maré; tráfico reage com barricadas em chamas - G1
- - G1 | Decoração de Natal em SP vira alvo de críticas nas redes sociais; prefeitura explica contratos e gastos de R$ 
+ - Gazeta do Povo | PT racha governo e rejeita segunda parte do ajuste fiscal - Gazeta do Povo
  - CNN Brasil | Espanha pode encerrar 8 anos de governo de esquerda; veja propostas - CNN Brasil
  - CNN Brasil | "É como ser amigo de Hitler na 2ª Guerra", diz Zelensky sobre Trump e Putin - CNN Brasil
- - R7 | Mulheres do Afeganistão perdem os nomes e são chamadas de ‘Bibi’, ‘gado’ ou ‘cabra’; entenda - R7
  - CNN Brasil | Senado da Argentina inicia debate sobre suspensão das eleições primárias - CNN Brasil
- - G1 | Mega-Sena 3091 acumula e prêmio vai a R$ 82 milhões; confira os números sorteados - G1
  - O GLOBO | Entra no rotativo do cartão com frequência ou tem empréstimo atrasado? Regras vão mudar. Veja perguntas e resp
- 34 | Flávio Bolsonaro | Mônica Bergamo: Deputado do PT pede ao STF bloqueio de R$ 79,3 milhões em emendas de Flávio Bolsonar
-  7 | Gustavo Gayer | PGR denuncia Gustavo Gayer por suspeita de desvio de cota parlamentar; deputado pode se tornar réu n
-  6 | Camilo Santana | Camilo Santana caminha para ser ministro da Casa Civil de Lula - O POVO
+ - Agência Brasil | Mega-Sena não tem ganhador e prêmio acumula para R$ 82 milhões - Agência Brasil
+ - G1 | No dia da Black Friday, 58% dos itens pesquisados têm descontos; 33% estão mais caros; veja lista - G1
+ 28 | Flávio Bolsonaro | Mônica Bergamo: Deputado do PT pede ao STF bloqueio de R$ 79,3 milhões em emendas de Flávio Bolsonar
+  6 | Gustavo Gayer | PGR denuncia Gustavo Gayer por suspeita de desvio de cota parlamentar; deputado pode se tornar réu n
+  5 | Camilo Santana | Piada no Planalto diz que Camilo Santana já é ministro da Casa Civil ‘no horário da Nova Zelândia’ -
+  4 | Nikolas Ferreira | PSOL e Nikolas Ferreira criticam, cada um a seu modo, escolha de Trabuco - TV Sim Brasil
   4 | Hugo Motta | Juliana e Cleber Chaparral se reúnem com Hugo Motta para discutir projetos para Pernambuco - Blog do
   4 | Rogerio Marinho | O dilema de Rogério Marinho com o voto aberto - PlatôBR
-  3 | Nikolas Ferreira | PSOL e Nikolas Ferreira criticam, cada um a seu modo, escolha de Trabuco - TV Sim Brasil
+  3 | Erika Hilton | Deputada Federal Erika Hilton - Portal da Câmara dos Deputados
   3 | Hildo Rocha | Hildo Rocha propõe maioria feminina e mandato de dez anos no STF - Vero Notícias
-  3 | Eduardo Braga | IFI entrega estudo sobre alíquota da CBS para Eduardo Braga - Senado Federal
+  3 | Eduardo Braga | Reunião Comissão Mista de Orçamento /Senador Eduardo Braga - Agência Brasil
   3 | Tereza Cristina | Não terá 3º turno comigo no comando do Senado, diz Tereza Cristina - Poder360
   2 | Julia Zanatta | Deputada Júlia Zanatta anuncia R$ 4,5 milhões em emendas para Tubarão em 2027 - Prefeitura de Tubarã
-  2 | Alencar Santana | Alencar Santana aciona STF para travar R$ 79,3 milhões em emendas de Flávio Bolsonaro - Brasil 247
-  2 | Erika Hilton | Deputada Federal Erika Hilton - Portal da Câmara dos Deputados
+  2 | Arthur Lira | EMENDAS PARLAMENTARES - Zanin interrompe julgamento sobre afastamento de ex-assessora de Arthur Lira
   2 | Marcel van Hattem | Fecomércio-RS homenageia deputado federal e senador eleito Marcel van Hattem - Fecomércio RS
-  2 | Leo Prates | Justiça Eleitoral aprova sem ressalvas contas de campanha do deputado federal Leo Prates - Bahia sem
+  2 | André Janones | Agência francesa elege André Janones uma das cinco personalidades que marcaram o mundo em 2026 - O G
   2 | Danilo Forte | Deputado Danilo Forte avalia mandato e defende avanços em energia renovável, reforma do Judiciário e
   2 | Alessandro Vieira | Senador Alessandro Vieira solicita acesso a relatórios da Polícia Federal sobre ministros do STF no 
+  2 | Jaques Wagner | Master: Fachin prorroga investigação sobre Jaques Wagner - SBT News
+  2 | Fernando Dueire | Câmara do Recife concede Medalha José Mariano ao senador Fernando Dueire - Blog Edmar Lyra
   2 | Davi Alcolumbre | ROSEANN KENNEDY | O presidente Luiz Inácio Lula da Silva está disposto a dar um xeque-mate no embate
-  1 | Vicentinho Júnior | Aleto amplia percentual de emendas parlamentares e aumenta destinação obrigatória para a saúde após 
+  1 | Alencar Santana | Alencar Santana aciona STF para travar R$ 79,3 milhões em emendas de Flávio Bolsonaro - Brasil 247
   1 | Lindbergh Farias | O deputado federal Lindbergh Farias (PT-RJ) comparou em nesta quinta-feira (26) a escolha de Luiz Ca
   1 | Delegado Fabio Costa | Prefeito Jorge Galvão recebe o deputado federal Delegado Fábio Costa para entrega de mais um equipam
+  1 | Luiz Philippe de Orleans e Bragança | Deputado Luiz Philippe de Orléans e Bragança lança campanha para a presidência da Câmara - Portal VV
   1 | Átila Lins | Omar Aziz e Átila Lins discutem futuro do Amazonas - PSD - Partido Social Democrático
   1 | Omar Aziz | Omar Aziz e Átila Lins discutem futuro do Amazonas - PSD - Partido Social Democrático
   1 | Coronel Assis | ELEIÇÕES 2028 – Mais votado em VG, Coronel Assis é defendido por Tião da Zaeli para disputar Prefeit
-  1 | André Janones | Agência francesa elege André Janones uma das cinco personalidades que marcaram o mundo em 2026 - O G
+  1 | Leo Prates | Justiça Eleitoral aprova sem ressalvas contas de campanha do deputado federal Leo Prates - Bahia sem
   1 | Saullo Vianna | Saullo Vianna cobra providências do Pará contra fumaça no Amazonas - BNC Amazonas
   1 | Pedro Campos | Pedro Campos leva debate sobre violência em Pernambuco à Câmara Federal - Jamildo
   1 | Felipe Carreras | Felipe Carreras retorna a Cachoeirinha e São Bento do Una, acompanha obras e anuncia novos investime
-  1 | Arthur Lira | “A defesa irrestrita de mais investimentos nos 102 municípios de AL será uma de minhas prioridades n
+  1 | Gabriel Nunes | "Esses próximos dias estarei me debruçando para que já na próxima semana possamos aprovar o relatóri
   1 | Pedro Lupion | Pedro Lupion deve ganhar supersecretaria que une Agricultura e Meio Ambiente no futuro governo Moro 
   1 | Pastor Sargento Isidório | Pastor Sargento Isidório confirma candidatura a prefeito de Salvador em 2028 - bra1.com.br
-  1 | Gabriel Nunes | "Esses próximos dias estarei me debruçando para que já na próxima semana possamos aprovar o relatóri
   1 | Marcelo Moraes | Marcelo Moraes é anunciado para o primeiro escalão do governo de Zucco - Olá Jornal
   1 | Otto Alencar | Wilson Cardoso se reúne com Otto Alencar para reforçar mobilização pela redução do INSS dos municípi
-  1 | Fernando Dueire | Câmara do Recife concede Medalha José Mariano ao senador Fernando Dueire - Blog Edmar Lyra
+  1 | Marcelo Castro | Marcelo Castro defende Rafael Fonteles no Ministério da Educação - CidadeVerde.com
+  1 | Paulinho da Força | 'Só conversa fiada': Paulinho da Força provoca o PL e líder rebate - PlatôBR
   1 | Geraldo Resende | Geraldo Resende explica projeto que prevê perda de herança por fraude contra idosos - Portal da Câma
   1 | Silvia Cristina | Silvia Cristina destaca programa de preparação para adolescentes após acolhimento - Portal da Câmara
   1 | Damares Alves | Damares Alves e Magno Malta recebem Gilson Machado na Câmara dos Deputados - Blog do Magno
@@ -55,4 +58,4 @@
   1 | Rogéria Santos | Comissão aprova relatório de Rogéria Santos sobre certidão de casamento de divorciados - Republicano
   1 | Zeca Dirceu | Zeca Dirceu comemora volta de Filosofia e Sociologia no Ensino Médio - zecadirceu.com.br
   1 | Eriberto Medeiros | Avança projeto de Eriberto Medeiros que prevê excluir da herança quem tentar controlar bens de idoso
-  1 | Daniella Ribeiro | Daniella Ribeiro destaca ações do Antes que Aconteça e informa que 600 escolas da Paraíba abordam vi
+  1 | Sergio Moro | PARANÁ: Sergio Moro anuncia seu atual chefe de gabinete no Senado para comandar a Casa Civil e Viníc
