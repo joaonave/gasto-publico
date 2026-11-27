@@ -127,7 +127,8 @@ def executar(data=None):
             print(f"Erro {nome}: {e}")
 
     # poucos candidatos: busca contratos dos dias anteriores ainda não publicados (até 7 dias)
-    alvo = 3 * pontos.TETO_DIA
+    vagas = pontos.TETO_DIA - (estado.get("pub_qtd", 0) if estado.get("pub_dia") == hoje else 0)
+    alvo = 3 * vagas  # teto quase cheio: não gasta 30 min buscando contratos antigos
     base = datetime.strptime(data, "%Y%m%d")
     for k in range(1, 8):
         if len(candidatos) >= alvo:
