@@ -20,20 +20,13 @@ jobs:
           mkdir -p dados/diag
           T="${{ inputs.apagar }}"; [ -z "$T" ] && [ -f dados/apagar.txt ] && T="$(cat dados/apagar.txt)"; case "$T" in apagar:??????????*) python -m robo.fila --apagar "${T#apagar:}" > dados/diag/fila.txt 2>&1 || true;; esac
           python -m robo.fila --listar >> dados/diag/fila.txt 2>&1 || true
-          pip install -q pypdf || true
-          python - > dados/diag/docs.txt 2>&1 <<'PY' || true
-          import io, requests
-          from pypdf import PdfReader
-          base = "https://pncp.gov.br/pncp-api/v1/orgaos/46523130000100/compras/2026/246/arquivos/"
-          for n in (3, 2):
-              r = requests.get(base + str(n), timeout=120)
-              print(f"===== arquivo {n} status {r.status_code} {r.headers.get('content-type')} {len(r.content)} bytes")
-              try:
-                  txt = "\n".join((p.extract_text() or "") for p in PdfReader(io.BytesIO(r.content)).pages)
-                  print(txt[:12000])
-              except Exception as e:
-                  print("erro", e)
-          PY
+          sudo apt-get -qq install -y tesseract-ocr tesseract-ocr-por poppler-utils > /dev/null 2>&1 || true
+          { for n in 3 2; do
+              curl -s -m 120 -o /tmp/a$n.pdf "https://pncp.gov.br/pncp-api/v1/orgaos/46523130000100/compras/2026/246/arquivos/$n"
+              pdftoppm -r 200 -png /tmp/a$n.pdf /tmp/p$n
+              echo "===== arquivo $n"
+              for img in /tmp/p$n*.png; do tesseract "$img" - -l por 2>/dev/null; done
+            done; } > dados/diag/docs.txt 2>&1 || true
           python - > dados/diag/ranking.txt 2>&1 <<'PY' || true
           from collections import defaultdict
           from robo import emendas, emendas_portal
