@@ -428,7 +428,8 @@
   "cota-8177792",
   "cota-8177017",
   "cota-8183727",
-  "cota-8183717"
+  "cota-8183717",
+  "raiox-Hugo Motta"
  ],
  "contador_posts": 27,
  "cota_ids": [
@@ -14511,9 +14512,9 @@
  ],
  "pos_raio_x": 43,
  "pub_dia": "2026-11-27",
- "pub_qtd": 9,
+ "pub_qtd": 10,
  "pub_cat": {
-  "raiox": 1,
+  "raiox": 2,
   "emenda": 3,
   "show": 2,
   "cota": 3
@@ -14526,13 +14527,16 @@
    "DEP. TÚLIO GADÊLHA (PSD-PE) USA A COTA NUM FIM DE SEMANA: R$ 13 MIL EM MANUTENÇÃO DE ESCRITÓRIO DE APOIO À ATIVIDADE PARLAMENTAR",
    "DEP. ZÉ NETO (PT-BA) TEM R$ 658 MIL PAGOS EM EMENDA PARA TRINDADE (GO). ELE É DE BA",
    "RAIO-X: DEP. GUSTAVO GAYER (PL-GO) TEVE R$ 30,66 MILHÕES PAGOS EM EMENDAS DESDE 2024",
+   "RAIO-X: DEP. HUGO MOTTA (REPUBLICANOS-PB) TEVE R$ 252,61 MILHÕES PAGOS EM EMENDAS DESDE 2016",
    "RAIO-X: SEN. FLÁVIO BOLSONARO (PL-RJ) TEVE R$ 224,98 MILHÕES PAGOS EM EMENDAS DESDE 2020",
    "SEN. ANGELO CORONEL (REPUBLICANOS-BA) TEM R$ 465 MIL PAGOS EM EMENDA PARA PORTO REAL (RJ). ELE É DE BA",
    "SEN. VANDERLAN CARDOSO (PSD-GO) TEM R$ 1,56 MILHÃO PAGOS EM EMENDA PARA SETE LAGOAS (MG). ELE É DE GO"
   ]
  },
- "raiox_dia": null,
+ "raiox_dia": "2026-11-27",
  "raiox_feitos": {
-  "GUSTAVO GAYER": "2026-11-27"
- }
+  "GUSTAVO GAYER": "2026-11-27",
+  "HUGO MOTTA": "2026-11-27"
+ },
+ "ultima_rodada": "2026-11-27"
 }
