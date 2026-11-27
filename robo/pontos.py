@@ -104,6 +104,7 @@ def nota(f, pop):
             pontos += 2
     elif categoria(f) == "show" and re.search(r"\bMC\b", f.get("fornecedor", ""), re.IGNORECASE):
         pontos += 3
+    pontos += f.get("mencoes", 0)  # raio-X: mais citado no noticiário vem primeiro
     f["nota"] = pontos
     return pontos
 

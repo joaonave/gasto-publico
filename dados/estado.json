@@ -14512,9 +14512,9 @@
  ],
  "pos_raio_x": 43,
  "pub_dia": "2026-11-27",
- "pub_qtd": 10,
+ "pub_qtd": 9,
  "pub_cat": {
-  "raiox": 2,
+  "raiox": 1,
   "emenda": 3,
   "show": 2,
   "cota": 3
@@ -14533,7 +14533,7 @@
    "SEN. VANDERLAN CARDOSO (PSD-GO) TEM R$ 1,56 MILHÃO PAGOS EM EMENDA PARA SETE LAGOAS (MG). ELE É DE GO"
   ]
  },
- "raiox_dia": "2026-11-27",
+ "raiox_dia": null,
  "raiox_feitos": {
   "GUSTAVO GAYER": "2026-11-27",
   "HUGO MOTTA": "2026-11-27"

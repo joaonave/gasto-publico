@@ -74,7 +74,7 @@ def _candidatos_emendas(estado, log):
             rx = emendas.raio_x(chave, planos, cadastro)
             if rx:
                 f = posts_emendas.post_raio_x(rx)
-                f["chave"], f["noticia"] = chave, lst[0]["titulo"]
+                f["chave"], f["noticia"], f["mencoes"] = chave, lst[0]["titulo"], len(lst)
                 c.append(f)
         if not any(f.get("tipo") == "raiox" for f in c):
             for _ in range(50):
