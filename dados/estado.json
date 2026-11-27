@@ -429,7 +429,9 @@
   "cota-8177017",
   "cota-8183727",
   "cota-8183717",
-  "raiox-Hugo Motta"
+  "raiox-Hugo Motta",
+  "ranking-deputados-20261127",
+  "ranking-deputados-20261127"
  ],
  "contador_posts": 27,
  "cota_ids": [
@@ -14512,17 +14514,19 @@
  ],
  "pos_raio_x": 43,
  "pub_dia": "2026-11-27",
- "pub_qtd": 9,
+ "pub_qtd": 10,
  "pub_cat": {
   "raiox": 1,
   "emenda": 3,
   "show": 2,
-  "cota": 3
+  "cota": 3,
+  "ranking": 1
  },
  "manchetes_dia": {
   "2026-11-27": [
    "",
    "DEP. ADILSON BARROSO (PL-SP) USA A COTA NUM FIM DE SEMANA: R$ 9.000 EM LOCAÇÃO OU FRETAMENTO DE VEÍCULOS AUTOMOTORES",
+   "DEP. ARTHUR LIRA LIDERA O RANKING DE EMENDAS PAGAS EM 2026: R$ 51,3 MILHÕES",
    "DEP. CARLOS HENRIQUE GAGUIM (UNIÃO-TO) TEM O MAIOR GASTO DO DIA NA COTA: R$ 150 MIL EM DIVULGAÇÃO DA ATIVIDADE PARLAMENTAR",
    "DEP. TÚLIO GADÊLHA (PSD-PE) USA A COTA NUM FIM DE SEMANA: R$ 13 MIL EM MANUTENÇÃO DE ESCRITÓRIO DE APOIO À ATIVIDADE PARLAMENTAR",
    "DEP. ZÉ NETO (PT-BA) TEM R$ 658 MIL PAGOS EM EMENDA PARA TRINDADE (GO). ELE É DE BA",
@@ -14538,5 +14542,7 @@
   "GUSTAVO GAYER": "2026-11-27",
   "HUGO MOTTA": "2026-11-27"
  },
- "ultima_rodada": "2026-11-27"
+ "ultima_rodada": "2026-11-27",
+ "ranking_dia": "2026-11-27",
+ "ranking_pos": 1
 }
