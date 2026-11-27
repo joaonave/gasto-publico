@@ -1,0 +1,15 @@
+  arquivos no zip: ['EmendasParlamentares.csv', 'EmendasParlamentares_Convenios.csv', 'EmendasParlamentares_Parcerias.csv', 'EmendasParlamentares_PlanodeTrabalhoParcerias.csv', 'EmendasParlamentares_PlanodeTrabalhoTransferenciasEspeciais.csv', 'EmendasParlamentares_PorFavorecido.csv']
+  usando: EmendasParlamentares_PorFavorecido.csv
+  colunas emendas: ['Código da Emenda', 'Código do Autor da Emenda', 'Nome do Autor da Emenda', 'Número da emenda', 'Tipo de Emenda', 'Ano/Mês', 'Código do Favorecido', 'Favorecido', 'Natureza Jurídica', 'Tipo Favorecido', 'UF Favorecido', 'Município Favorecido', 'Valor Recebido']
+  mapeamento: {'codigo': 'Código da Emenda', 'ano': 'Ano/Mês', 'tipo': 'Tipo de Emenda', 'autor': 'Nome do Autor da Emenda', 'municipio': 'Município Favorecido', 'uf': 'UF Favorecido', 'localidade': None, 'funcao': None, 'pago': 'Valor Recebido', 'favorecido': 'Favorecido', 'cod_favorecido': 'Código do Favorecido', 'empenhado': None, 'natureza': 'Natureza Jurídica', 'tipo_favorecido': 'Tipo Favorecido'}
+  emendas no arquivo: 838284
+[('Emenda Individual - Transferências com Finalidade Definida', 420942), ('Emenda de Relator', 207369), ('Emenda de Bancada', 109874), ('Emenda Individual - Transferências Especiais', 54824), ('Emenda de Comissão', 45275)]
+pix linhas 54824
+[(('Município', 'Pessoa Jurídica'), 53009), (('Estado ou Distrito Federal', 'Pessoa Jurídica'), 1291), (('Sociedade de Economia Mista', 'Pessoa Jurídica'), 256), (('Sociedade Anônima Fechada', 'Pessoa Jurídica'), 86), (('Sociedade Empresária Limitada', 'Pessoa Jurídica'), 78), (('Sem informação', 'Sem informação'), 51)]
+[('202605', 3646), ('202611', 2662), ('202606', 2353), ('202609', 83), ('202607', 74), ('202604', 64), ('202608', 60), ('202603', 60), ('202610', 18)]
+{'autor': 'JORGINHO MELLO', 'favorecido': 'MUNICIPIO DE ZORTEA', 'municipio': 'ZORTÉA', 'uf': 'SC', 'ano_mes': '202006', 'pago': 100000.0, 'funcao': ''}
+{'autor': 'FRED COSTA', 'favorecido': 'PREFEITURA MUNICIPAL DE IGARAPE', 'municipio': 'IGARAPÉ', 'uf': 'MG', 'ano_mes': '202006', 'pago': 472900.0, 'funcao': ''}
+{'autor': 'CARLOS VIANA', 'favorecido': 'PREFEITURA MUNICIPAL DE IGARAPE', 'municipio': 'IGARAPÉ', 'uf': 'MG', 'ano_mes': '202006', 'pago': 230000.0, 'funcao': ''}
+{'autor': 'ARNALDO JARDIM', 'favorecido': 'PREFEITURA MUNICIPAL DE PARANAPANEMA', 'municipio': 'PARANAPANEMA', 'uf': 'SP', 'ano_mes': '202006', 'pago': 150000.0, 'funcao': ''}
+{'autor': 'JAYME CAMPOS', 'favorecido': 'PREFEITURA MUNICIPAL DE QUERENCIA', 'municipio': 'QUERÊNCIA', 'uf': 'MT', 'ano_mes': '202006', 'pago': 120000.0, 'funcao': ''}
+cidades com pix 2026: 3857 total 6.15 bi

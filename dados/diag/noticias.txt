@@ -1,54 +1,58 @@
-524 manchetes/tendências
- - G1 | Luiz Trabuco se reúne com Lula em Brasília; executivo do Bradesco é cotado para assumir Ministério da Fazenda 
- - Folha de S.Paulo | Brasil atinge recorde de alunos no ensino superior e mais pretos, pardos e indígenas nas federais pela 1ª vez 
- - Agência Brasil | STF: estados e municípios são obrigados a pagar piso dos professores - Agência Brasil
- - G1 | Macron diz que carne brasileira é 'dopada' e comemora bloqueio da UE ao produto - G1
- - Metrópoles | Cleitinho se reúne com Lula e aposta em petistas para aliviar dívida de MG - Metrópoles
- - Estadão | Bastidores: ‘Empoderado’, Lula prepara xeque-mate em Alcolumbre com indicação de mulher para o STF - Estadão
- - G1 | Cascata em rua, enxurradas e UPA invadida por água: temporal causa transtornos em BH e Região Metropolitana - 
- - ICL Notícias | Comissão aprova projeto que torna Filosofia e Sociologia obrigatórias no ensino médio - ICL Notícias
- - CNN Brasil | Israel: Eisenkot faz acordo com grupo de esquerda em negociação de governo - CNN Brasil
- - G1 | EUA divulgam arquivos oficiais sobre Pé-Grande e reacendem mistério - G1
- - G1 | Kim Jong-un visita instalação de enriquecimento de urânio e promete construir mais armas nucleares; FOTOS - G1
- - UOL Notícias | Israel mata vice-ministro da Educação do Hamas e mais 8 pessoas em Gaza - UOL Notícias
- - G1 | Na véspera da Black Friday, 60% dos produtos pesquisados pelo g1 já estão mais baratos; veja lista - G1
- - CNN Brasil | Endividamento: Veja medidas do BC que podem afetar 20 milhões de clientes - CNN Brasil
+518 manchetes/tendências
+ - G1 | Nova reforma da Previdência e ajuste fiscal 'cívico': conheça as posições de Luiz Carlos Trabuco, futuro minis
+ - O POVO | Camilo Santana caminha para ser ministro da Casa Civil de Lula - O POVO
+ - O GLOBO | Lula consulta Cármen Lúcia sobre nomes de mulheres para vaga no STF - O GLOBO
+ - Metrópoles | Alckmin será ministro da Segurança e avalia convidar Gakiya para secretário - Metrópoles
+ - Outras Palavras | Cinco hipóteses sobre o “ajuste fiscal” e o futuro - Outras Palavras
+ - Poder360 | Cleitinho brinca sobre Lula querer viver 130 anos: “Vou pedir saúde” - Poder360
+ - G1 | Após EUA proporem taxar aviões brasileiros, Mauro Vieira oferece apoio à Embraer para buscar novos mercados - 
+ - G1 | PM faz operação com mais de 100 agentes no Complexo da Maré; tráfico reage com barricadas em chamas - G1
+ - G1 | Decoração de Natal em SP vira alvo de críticas nas redes sociais; prefeitura explica contratos e gastos de R$ 
+ - CNN Brasil | Espanha pode encerrar 8 anos de governo de esquerda; veja propostas - CNN Brasil
+ - CNN Brasil | "É como ser amigo de Hitler na 2ª Guerra", diz Zelensky sobre Trump e Putin - CNN Brasil
+ - R7 | Mulheres do Afeganistão perdem os nomes e são chamadas de ‘Bibi’, ‘gado’ ou ‘cabra’; entenda - R7
+ - CNN Brasil | Senado da Argentina inicia debate sobre suspensão das eleições primárias - CNN Brasil
  - G1 | Mega-Sena 3091 acumula e prêmio vai a R$ 82 milhões; confira os números sorteados - G1
- 32 | Flávio Bolsonaro | Flávio Bolsonaro indica R$ 79,4 milhões em emendas; destinação pode ser barrada por Dino - CartaCapi
- 18 | Gustavo Gayer | PGR denuncia deputado federal Gustavo Gayer por desvio de cota parlamentar do gabinete - R7
-  9 | Eduardo Braga | Reunião Comissão Mista de Orçamento /Senador Eduardo Braga - Agência Brasil
-  6 | Hugo Motta | Hugo Motta diz que Congresso pode reduzir emendas para equilibrar contas públicas - poderpb.com.br
-  4 | Hildo Rocha | Hildo Rocha propõe maioria feminina e mandato de dez anos no STF - Vero Notícias
-  3 | Marcel van Hattem | Opinião | Fala de Marcel Van Hattem sobre delegado ocorreu perfeitamente associada à natureza do man
-  3 | Nikolas Ferreira | Janones denuncia armação do bolsonarista Nikolas Ferreira contra ele - Hora do Povo
-  3 | Fernando Dueire | Câmara do Recife concede Medalha José Mariano ao senador Fernando Dueire - Blog Edmar Lyra
-  2 | Delegado Paulo Bilynskyj | O deputado federal Delegado Paulo Bilynskyj (PL-SP) anunciou nesta quarta-feira (25) que pretende di
-  2 | Erika Hilton | Bilynskyj diz que vai disputar com Erika Hilton o comando da Comissão da Mulher em 2027 - Diário do 
-  2 | Otto Alencar | Wilson Cardoso se reúne com Otto Alencar para reforçar mobilização pela redução do INSS dos municípi
+ - O GLOBO | Entra no rotativo do cartão com frequência ou tem empréstimo atrasado? Regras vão mudar. Veja perguntas e resp
+ 34 | Flávio Bolsonaro | Mônica Bergamo: Deputado do PT pede ao STF bloqueio de R$ 79,3 milhões em emendas de Flávio Bolsonar
+  7 | Gustavo Gayer | PGR denuncia Gustavo Gayer por suspeita de desvio de cota parlamentar; deputado pode se tornar réu n
+  6 | Camilo Santana | Camilo Santana caminha para ser ministro da Casa Civil de Lula - O POVO
+  4 | Hugo Motta | Juliana e Cleber Chaparral se reúnem com Hugo Motta para discutir projetos para Pernambuco - Blog do
+  4 | Rogerio Marinho | O dilema de Rogério Marinho com o voto aberto - PlatôBR
+  3 | Nikolas Ferreira | PSOL e Nikolas Ferreira criticam, cada um a seu modo, escolha de Trabuco - TV Sim Brasil
+  3 | Hildo Rocha | Hildo Rocha propõe maioria feminina e mandato de dez anos no STF - Vero Notícias
+  3 | Eduardo Braga | IFI entrega estudo sobre alíquota da CBS para Eduardo Braga - Senado Federal
+  3 | Tereza Cristina | Não terá 3º turno comigo no comando do Senado, diz Tereza Cristina - Poder360
+  2 | Julia Zanatta | Deputada Júlia Zanatta anuncia R$ 4,5 milhões em emendas para Tubarão em 2027 - Prefeitura de Tubarã
+  2 | Alencar Santana | Alencar Santana aciona STF para travar R$ 79,3 milhões em emendas de Flávio Bolsonaro - Brasil 247
+  2 | Erika Hilton | Deputada Federal Erika Hilton - Portal da Câmara dos Deputados
+  2 | Marcel van Hattem | Fecomércio-RS homenageia deputado federal e senador eleito Marcel van Hattem - Fecomércio RS
+  2 | Leo Prates | Justiça Eleitoral aprova sem ressalvas contas de campanha do deputado federal Leo Prates - Bahia sem
+  2 | Danilo Forte | Deputado Danilo Forte avalia mandato e defende avanços em energia renovável, reforma do Judiciário e
+  2 | Alessandro Vieira | Senador Alessandro Vieira solicita acesso a relatórios da Polícia Federal sobre ministros do STF no 
+  2 | Davi Alcolumbre | ROSEANN KENNEDY | O presidente Luiz Inácio Lula da Silva está disposto a dar um xeque-mate no embate
   1 | Vicentinho Júnior | Aleto amplia percentual de emendas parlamentares e aumenta destinação obrigatória para a saúde após 
-  1 | Júlio Cesar | Jùlio Cesar destina 100% de suas emendas parlamentares de 2027 para cirurgias eletivas - Radio Sanca
   1 | Lindbergh Farias | O deputado federal Lindbergh Farias (PT-RJ) comparou em nesta quinta-feira (26) a escolha de Luiz Ca
   1 | Delegado Fabio Costa | Prefeito Jorge Galvão recebe o deputado federal Delegado Fábio Costa para entrega de mais um equipam
-  1 | Natália Bonavides | Dragão do Mar realiza debate com deputadas federais eleitas Luisa Cela, Maria Marighella, Natália Bo
-  1 | Danilo Forte | Deputado Danilo Forte avalia mandato e defende avanços em energia renovável, reforma do Judiciário e
+  1 | Átila Lins | Omar Aziz e Átila Lins discutem futuro do Amazonas - PSD - Partido Social Democrático
+  1 | Omar Aziz | Omar Aziz e Átila Lins discutem futuro do Amazonas - PSD - Partido Social Democrático
+  1 | Coronel Assis | ELEIÇÕES 2028 – Mais votado em VG, Coronel Assis é defendido por Tião da Zaeli para disputar Prefeit
+  1 | André Janones | Agência francesa elege André Janones uma das cinco personalidades que marcaram o mundo em 2026 - O G
+  1 | Saullo Vianna | Saullo Vianna cobra providências do Pará contra fumaça no Amazonas - BNC Amazonas
   1 | Pedro Campos | Pedro Campos leva debate sobre violência em Pernambuco à Câmara Federal - Jamildo
-  1 | Leonardo Monteiro | Deputado Leonardo Monteiro confirma portaria de funcionamento do Instituto Federal em Caratinga - Di
-  1 | Leo Prates | Justiça Eleitoral aprova sem ressalvas contas de campanha do deputado federal Leo Prates - Classe Po
-  1 | Sâmia Bomfim | Sâmia Bomfim vê PL no bloco de Hugo Motta e cita negociação com Moraes sobre penas de Bolsonaro - Po
-  1 | José Guimarães | José Guimarães volta ao cargo de ministro após votar ajuste fiscal - Poder360
+  1 | Felipe Carreras | Felipe Carreras retorna a Cachoeirinha e São Bento do Una, acompanha obras e anuncia novos investime
   1 | Arthur Lira | “A defesa irrestrita de mais investimentos nos 102 municípios de AL será uma de minhas prioridades n
-  1 | André Janones | Agência francesa inclui André Janones entre cinco personalidades que marcaram 2026 - Brasil 247
-  1 | André Ferreira | André Ferreira diz que ajuste fiscal tira recursos de áreas essenciais - Folha PE
-  1 | Renata Abreu | Corredores exclusivos para motos: projeto da deputada Renata Abreu avança mais uma casa - Podemos
-  1 | Cristiane Lopes | Deputada Federal Cristiane Lopes destaca novo avanço na luta pela proteção das mulheres - Portal Gua
-  1 | Alessandro Vieira | Alessandro Vieira pede que STF torne públicos relatórios da PF sobre o caso Master - Congresso em Fo
-  1 | Eduardo Gomes | Senador Eduardo Gomes anuncia R$ 10 milhões para a saúde de Araguaína e celebra voos da Latam - RR10
-  1 | Wilder Morais | Gayer acusa Wilder Morais de atuar para acelerar processo no STF por disputa pelo comando do PL em G
-  1 | Neto Carletto | Orçamento de 2027: relatório do baiano Neto Carletto eleva receita em R$ 37,1 bilhões e é aprovado n
+  1 | Pedro Lupion | Pedro Lupion deve ganhar supersecretaria que une Agricultura e Meio Ambiente no futuro governo Moro 
+  1 | Pastor Sargento Isidório | Pastor Sargento Isidório confirma candidatura a prefeito de Salvador em 2028 - bra1.com.br
+  1 | Gabriel Nunes | "Esses próximos dias estarei me debruçando para que já na próxima semana possamos aprovar o relatóri
+  1 | Marcelo Moraes | Marcelo Moraes é anunciado para o primeiro escalão do governo de Zucco - Olá Jornal
+  1 | Otto Alencar | Wilson Cardoso se reúne com Otto Alencar para reforçar mobilização pela redução do INSS dos municípi
+  1 | Fernando Dueire | Câmara do Recife concede Medalha José Mariano ao senador Fernando Dueire - Blog Edmar Lyra
+  1 | Geraldo Resende | Geraldo Resende explica projeto que prevê perda de herança por fraude contra idosos - Portal da Câma
   1 | Silvia Cristina | Silvia Cristina destaca programa de preparação para adolescentes após acolhimento - Portal da Câmara
   1 | Damares Alves | Damares Alves e Magno Malta recebem Gilson Machado na Câmara dos Deputados - Blog do Magno
   1 | Magno Malta | Damares Alves e Magno Malta recebem Gilson Machado na Câmara dos Deputados - Blog do Magno
+  1 | Rogéria Santos | Comissão aprova relatório de Rogéria Santos sobre certidão de casamento de divorciados - Republicano
   1 | Zeca Dirceu | Zeca Dirceu comemora volta de Filosofia e Sociologia no Ensino Médio - zecadirceu.com.br
   1 | Eriberto Medeiros | Avança projeto de Eriberto Medeiros que prevê excluir da herança quem tentar controlar bens de idoso
-  1 | Tereza Cristina | Bolsonaristas atacam Tereza Cristina gananciosos para empalmar o Senado - Hora do Povo
-  1 | Paulinho da Força | 'Só conversa fiada': Paulinho da Força provoca o PL e líder rebate - PlatôBR
+  1 | Daniella Ribeiro | Daniella Ribeiro destaca ações do Antes que Aconteça e informa que 600 escolas da Paraíba abordam vi
