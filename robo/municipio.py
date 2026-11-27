@@ -90,8 +90,7 @@ IRONIA = {
              "Infra em dia: {esg} com esgoto na rede. Prioridade agora é o palco."],
     "midia": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. Falta só contar pra todo mundo.",
               "Com {esg} de esgoto na rede, o problema agora é a divulgação."],
-    "outro": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. Pode gastar.",
-              "Saneamento resolvido ({esg} com esgoto na rede). Sobrou."],
+    "inusitada": ["🇩🇰 Parece a Dinamarca: {esg} com rede de esgoto. Sobrou para o requinte."],
 }
 
 
@@ -120,8 +119,9 @@ def comentario(f, d, populacao=None, hom=None, anos_hom=""):
     linhas += [l for _, l in sorted(choque, key=lambda x: -x[0])]
     if any("IBGE" not in l and ("🚽" in l or "💩" in l or "🚱" in l) for _, l in choque):
         linhas.append("(IBGE, Censo 2022)")
-    elif not choque and d.get("esgoto", 0) >= 90 and d.get("agua", 0) >= 95:
-        banco = IRONIA.get(f.get("tipo"), IRONIA["outro"])
+    elif not choque and d.get("esgoto", 0) >= 90 and d.get("agua", 0) >= 95 and f.get("tipo") in IRONIA:
+        # ironia só quando a própria prefeitura gastou (show, publicidade, compra); emenda recebida não é gasto dela
+        banco = IRONIA[f["tipo"]]
         frase = banco[sum(map(ord, f.get("id", f["municipio"]))) % len(banco)]
         linhas += [frase.format(esg=_pct(d["esgoto"])), "(IBGE, Censo 2022)"]
     if "idhm" in d:
