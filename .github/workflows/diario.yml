@@ -5,7 +5,12 @@ on:
     branches: [main]
     paths: ["robo/**", "requirements.txt", ".github/workflows/**"]   # código novo roda sozinho
   schedule:
-    - cron: "7 10 * * *"   # 07:07 em Brasília
+    # o agendamento do GitHub atrasa ou falha: várias tentativas; só a primeira do dia roda (ultima_rodada)
+    - cron: "7 10 * * *"   # 07:07
+    - cron: "37 10 * * *"  # 07:37
+    - cron: "17 11 * * *"  # 08:17
+    - cron: "7 12 * * *"   # 09:07
+    - cron: "7 14 * * *"   # 11:07
   workflow_dispatch:
     inputs:
       data:

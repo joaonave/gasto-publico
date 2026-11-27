@@ -109,6 +109,9 @@ def executar(data=None):
     hoje = datetime.now(BRT).strftime("%Y-%m-%d")
     print(f"Data: {data} | publicar: {ligar}")
     estado = _carregar_estado()
+    if os.environ.get("GITHUB_EVENT_NAME") == "schedule" and estado.get("ultima_rodada") == hoje:
+        print("Rodada de hoje já feita; agendamento extra ignorado.")
+        return
     log = [f"# Robô – dados de {data[6:]}/{data[4:6]}/{data[:4]} – execução {datetime.now(BRT):%d/%m %H:%M}", ""]
 
     candidatos = []
@@ -208,6 +211,7 @@ def executar(data=None):
             estado["vistos"].append(f["id"])
             estado["vistos"].extend(f.get("ids_extras", []))
 
+    estado["ultima_rodada"] = hoje
     SAIDA.mkdir(exist_ok=True)
     arq = SAIDA / f"{data}.md"
     arq.write_text("\n".join(log), encoding="utf-8")
