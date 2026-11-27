@@ -31,7 +31,10 @@ jobs:
     timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main   # sempre o código mais novo (rodada na fila não usa código velho)
       - name: Bloquear re-run de código antigo
+        if: github.run_attempt > 1
         run: |
           ATUAL=$(git ls-remote origin refs/heads/main | cut -f1)
           if [ "$ATUAL" != "$GITHUB_SHA" ]; then
@@ -41,7 +44,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements.txt pytest
+      - name: Testes (erros que já aconteceram não podem voltar)
+        run: python -m pytest -q tests
       - name: Executar robô
         env:
           XAI_KEY: ${{ secrets.XAI_KEY }}
@@ -69,3 +74,29 @@ jobs:
           git diff --cached --quiet || git commit -m "Resultado da publicação"
           git pull --rebase -X theirs origin main
           git push
+      - name: Avisar se o dia ficou sem posts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PY'
+          import json, os, subprocess
+          from datetime import datetime, timedelta, timezone
+          agora = datetime.now(timezone(timedelta(hours=-3)))
+          hoje = agora.strftime("%Y-%m-%d")
+          if os.environ.get("GITHUB_EVENT_NAME") == "push" and agora.hour < 10:
+              raise SystemExit(0)  # push de madrugada: a rodada do dia ainda vai acontecer
+          e = json.load(open("dados/estado.json"))
+          qtd = e.get("pub_qtd", 0) if e.get("pub_dia") == hoje else 0
+          print("posts hoje:", qtd)
+          if qtd == 0:
+              url = f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+              subprocess.run(["gh", "issue", "create", "--title", f"Dia sem posts – {hoje}", "--body",
+                              f"@joaonave a rodada terminou sem nenhum post agendado hoje. Relatório em saida/. Execução: {url}"])
+          PY
+      - name: Avisar falha
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create --title "Robô falhou – $(TZ=America/Sao_Paulo date +%F)" \
+            --body "@joaonave a rodada falhou e nada foi publicado. Execução: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

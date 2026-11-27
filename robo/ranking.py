@@ -92,6 +92,14 @@ def fato(variante, linhas, cadastro, ano=None):
         corpo = (f"São emendas de bancada, comissão e relator: {round(100 * sem_dono / total)}% de tudo que foi pago.\n"
                  f"Com nome e sobrenome: R$ {_v(total - sem_dono)}.")
         valor = sem_dono
+    # lista encurta (4 → 3 → 2 nomes) até o post caber em 280 com folga
+    def cabe(t):
+        return len(manchete) + len(t) + 40 <= 280
+    if variante in ("deputados", "senadores", "pix"):
+        linhas_ = corpo.split("\n")
+        while len(linhas_) > 2 and not cabe("\n".join(linhas_)):
+            linhas_.pop()
+        corpo = "\n".join(linhas_)
     comentario = {"deputados": "Seu deputado está na lista?", "senadores": "Seu senador está na lista?",
                   "pix": "Direto no caixa da prefeitura, sem finalidade definida.",
                   "partido": "E o partido que você vota?", "uf": "E o seu estado, onde ficou?",
