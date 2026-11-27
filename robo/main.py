@@ -122,8 +122,12 @@ def executar(data=None):
     hoje = datetime.now(BRT).strftime("%Y-%m-%d")
     print(f"Data: {data} | publicar: {ligar}")
     estado = _carregar_estado()
+    simular = os.environ.get("SIMULAR") == "1"
+    if simular:  # teste integrado: dia "novo", nada é gravado nem publicado
+        estado.update(pub_dia=None, pub_qtd=0, pub_cat={}, ranking_dia=None, raiox_dia=None, manchetes_dia={})
+        ligar = False
     # disparos automáticos (cron do GitHub ou externo) rodam uma vez por dia; push e data manual sempre rodam
-    if (os.environ.get("GITHUB_EVENT_NAME") in ("schedule", "workflow_dispatch") and not os.environ.get("DATA")
+    if (not simular and os.environ.get("GITHUB_EVENT_NAME") in ("schedule", "workflow_dispatch") and not os.environ.get("DATA")
             and estado.get("ultima_rodada") == hoje):
         print("Rodada de hoje já feita; agendamento extra ignorado.")
         return
@@ -265,12 +269,52 @@ def executar(data=None):
         estado["vistos"].append(f["id"])
         estado["vistos"].extend(f.get("ids_extras", []))
 
+    if simular:
+        _relatorio_simulacao(data, aprovados, segurados, log)
+        return
     estado["ultima_rodada"] = hoje
     SAIDA.mkdir(exist_ok=True)
     arq = SAIDA / f"{data}.md"
     arq.write_text("\n".join(log), encoding="utf-8")
     _salvar_estado(estado)
     print(f"Gravado: {arq.relative_to(RAIZ)}")
+
+
+def _relatorio_simulacao(data, aprovados, segurados, log):
+    """Teste integrado: mostra exatamente o que iria ao X (post + 1º comentário) e confere cada um."""
+    out = [f"# Teste integrado – dados de {data} – {datetime.now(BRT):%d/%m %H:%M}", ""]
+    try:
+        canal = publicar.canal_x()
+        out.append(f"Buffer: conectado, canal X = {canal.get('name') or canal.get('id')}")
+    except Exception as e:  # noqa: BLE001
+        out.append(f"Buffer: FALHA na conexão ({e})")
+    problemas = 0
+    for f, post in aprovados:
+        fonte = f"Fonte oficial:\n{post['link']}"
+        dados = publicar._caber(post.get("dados_municipio") or "", "\n\n" + fonte)
+        resposta = (dados + "\n\n" if dados else "") + fonte
+        checks = {
+            "post ≤ 280": publicar._tam_x(post["corpo_sem_link"]) <= 280,
+            "1º comentário ≤ 280": publicar._tam_x(resposta) <= 280,
+            "sem link no post": "http" not in post["corpo_sem_link"],
+            "card gerado": bool(post.get("card")) and (RAIZ / post["card"]).exists(),
+            "sem erros de checagem": not post["erros"],
+            "sem PAGA na manchete": " PAGA " not in post["corpo_sem_link"].split("\n")[0],
+            "item conferido (contratos)": f.get("tipo") not in ("show", "midia", "inusitada")
+                                          or f.get("item_confirmado") is not None or f.get("tipo") != "inusitada",
+        }
+        falhou = [k for k, v in checks.items() if not v]
+        problemas += bool(falhou)
+        out += [f"## {'OK' if not falhou else 'PROBLEMA: ' + ', '.join(falhou)} | {f.get('tipo')} | nota {f.get('nota')}",
+                "POST:", "```", post["corpo_sem_link"], "```", "1º COMENTÁRIO:", "```", resposta, "```",
+                f"Objeto: {(f.get('objeto') or '')[:250]}", ""]
+    out.insert(2, f"**{len(aprovados)} posts prontos | {problemas} com problema | {len(segurados)} segurados**")
+    out += ["", "## Segurados"] + [f"- {f.get('manchete_padrao') or f.get('orgao')} → {'; '.join(m)}" for f, m in segurados]
+    out += ["", "## Log da rodada", ""] + log
+    arq = RAIZ / "dados" / "diag" / "teste_integrado.md"
+    arq.parent.mkdir(parents=True, exist_ok=True)
+    arq.write_text("\n".join(out), encoding="utf-8")
+    print(f"Teste integrado: {len(aprovados)} posts, {problemas} com problema -> {arq.relative_to(RAIZ)}")
 
 
 if __name__ == "__main__":
