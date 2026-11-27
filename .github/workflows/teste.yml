@@ -23,6 +23,8 @@ jobs:
           BUFFER_KEY: ${{ secrets.BUFFER_KEY }}
           SIMULAR: "1"
         run: python -u -m robo.main
+      - name: Relatório
+        run: cat dados/diag/teste_integrado.md
       - uses: actions/upload-artifact@v4
         with:
           name: teste-integrado
