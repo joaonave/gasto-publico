@@ -1,3 +1,4 @@
+import re
 """Monta fatos e posts de emendas Pix."""
 from .emendas import TRANSFEREGOV
 from .shows import valor_exato, valor_manchete
@@ -90,10 +91,15 @@ def post_raio_x(rx):
     sigla = f"{rx['partido']}-{rx['uf']}".strip("-")
     top = rx["top"][0] if rx["top"] else None
     pct = 100 * rx["fora_do_estado"] / rx["total"] if rx["total"] else 0
-    manchete = f"RAIO-X: {rx['cargo']} {rx['nome']} ({sigla}) TEVE {valor_manchete(rx['total'])} PAGOS EM EMENDAS DESDE 2014".upper()
+    anos = sorted(a for a, v in rx["por_ano"].items() if v > 0)
+    desde = anos[0] if anos else "2014"
+    manchete = f"RAIO-X: {rx['cargo']} {rx['nome']} ({sigla}) TEVE {valor_manchete(rx['total'])} PAGOS EM EMENDAS DESDE {desde}".upper()
     linha = ""
+    ultimo = anos[-1] if anos else ""
+    if ultimo and ultimo != desde:
+        linha = f"Só em {ultimo}: {valor_manchete(rx['por_ano'][ultimo])}. "
     if top:
-        linha = f"Maior destino: {top['destino'].title()} ({top['uf']}), {valor_manchete(top['valor'])}."
+        linha += f"Maior destino: {re.sub(r'\\b(De|Da|Do|Das|Dos|E)\\b', lambda m: m.group(1).lower(), top['destino'].title())} ({top['uf']}), {valor_manchete(top['valor'])}."
     if rx["uf"] and pct >= 1:
         linha += f" {pct:.0f}% foi para fora de {rx['uf']}."
     return {

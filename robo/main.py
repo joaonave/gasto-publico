@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import card, cota, homicidios, municipio, qa, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
+from . import card, cota, homicidios, municipio, noticias, qa, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -53,14 +53,38 @@ def _candidatos_emendas(estado, log):
     else:
         c = [f for f in (posts_emendas.fatos_pagamento(r, cadastro) for r in pagos) if f]
         log.append(f"Emendas: {len(pagos)} pagamentos acima do corte | {len(c)} com deputado/senador identificado")
-    # Raio-X do dia (rodízio sorteado entre deputados e senadores)
-    if estado.get("raiox_dia") != datetime.now(BRT).strftime("%Y-%m-%d"):
+    # Raio-X: primeiro quem está no noticiário (mais citado nas últimas 24h); sem notícia, rodízio
+    hoje = datetime.now(BRT)
+    if estado.get("raiox_dia") != hoje.strftime("%Y-%m-%d"):
         planos = emendas_portal.para_planos(todas)
-        for _ in range(50):
-            rx = emendas.raio_x(emendas.proximo_raio_x(estado, cadastro), planos, cadastro)
-            if rx:
-                c.append(posts_emendas.post_raio_x(rx))
+        feitos = {k for k, d in estado.get("raiox_feitos", {}).items()
+                  if (hoje - datetime.fromisoformat(d).replace(tzinfo=BRT)).days < 14}
+        try:
+            citados = noticias.parlamentares_citados(noticias.manchetes(), cadastro)
+        except Exception as e:  # noqa: BLE001
+            citados = {}
+            log.append(f"Notícias indisponíveis: {e}")
+        ranking = sorted(citados.items(), key=lambda kv: -len(kv[1]))
+        log.append("Parlamentares no noticiário: " + ", ".join(f"{cadastro[k]['nome']} ({len(v)})" for k, v in ranking[:8]))
+        for chave, lst in ranking:
+            if len(c) and sum(1 for f in c if f.get("tipo") == "raiox") >= pontos.LIMITE_DIA["raiox"]:
                 break
+            if chave in feitos:
+                continue
+            rx = emendas.raio_x(chave, planos, cadastro)
+            if rx:
+                f = posts_emendas.post_raio_x(rx)
+                f["chave"], f["noticia"] = chave, lst[0]["titulo"]
+                c.append(f)
+        if not any(f.get("tipo") == "raiox" for f in c):
+            for _ in range(50):
+                chave = emendas.proximo_raio_x(estado, cadastro)
+                rx = emendas.raio_x(chave, planos, cadastro)
+                if rx:
+                    f = posts_emendas.post_raio_x(rx)
+                    f["chave"] = chave
+                    c.append(f)
+                    break
     return c
 
 
@@ -176,6 +200,7 @@ def executar(data=None):
             estado["vistos"].extend(f.get("ids_extras", []))
             if f.get("tipo") == "raiox":
                 estado["raiox_dia"] = hoje
+                estado.setdefault("raiox_feitos", {})[f.get("chave", f["id"])] = hoje
 
     # tudo que foi avaliado hoje não volta amanhã
     for f in candidatos:

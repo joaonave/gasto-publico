@@ -1,4 +1,4 @@
-"""Assuntos quentes do dia: manchetes do Google Notícias (RSS público) e buscas em alta do Google Trends.
+"""Assuntos do dia: manchetes do Google Notícias (RSS público).
 
 Uso: casar parlamentares citados nas manchetes com o raio-X de emendas (fonte oficial) e postar no embalo.
 """
@@ -15,7 +15,6 @@ import requests
 UA = {"User-Agent": "gasto-publico-bot/1.0 (+https://github.com/joaonave/gasto-publico)"}
 GNEWS = "https://news.google.com/rss/search?q={q}&hl=pt-BR&gl=BR&ceid=BR:pt-419"
 TOPO = "https://news.google.com/rss?hl=pt-BR&gl=BR&ceid=BR:pt-419"
-TRENDS = "https://trends.google.com/trending/rss?geo=BR"
 BUSCAS = ["emendas parlamentares", "deputado federal", "senador", "Congresso orçamento",
           "prefeitura show cachê", "Câmara dos Deputados", "Senado Federal"]
 
@@ -42,7 +41,7 @@ def _rss(url):
 
 
 def manchetes(horas=24):
-    """Manchetes recentes (sem duplicar), mais o termo das buscas em alta."""
+    """Manchetes recentes de veículos (sem duplicar). Sem trending topics: regra de automação do X."""
     limite = datetime.now(timezone.utc) - timedelta(hours=horas)
     vistos, out = set(), []
     urls = [TOPO] + [GNEWS.format(q=quote(q + " when:1d")) for q in BUSCAS]
@@ -57,11 +56,6 @@ def manchetes(horas=24):
                     out.append(it)
         except Exception as e:  # noqa: BLE001
             print(f"  notícias: {u[:60]} indisponível ({str(e)[:80]})")
-    try:
-        for it in _rss(TRENDS):
-            out.append(dict(it, tendencia=True))
-    except Exception as e:  # noqa: BLE001
-        print(f"  trends indisponível ({str(e)[:80]})")
     return out
 
 

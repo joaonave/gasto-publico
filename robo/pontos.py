@@ -14,7 +14,7 @@ from pathlib import Path
 
 import requests
 
-LIMITE_DIA = {"show": 3, "midia": 2, "inusitada": 2, "emenda": 3, "cota": 3, "raiox": 1}
+LIMITE_DIA = {"show": 3, "midia": 2, "inusitada": 2, "emenda": 3, "cota": 3, "raiox": 2}
 TETO_DIA = 10
 INTERESSE = {"show": 1, "midia": 1, "inusitada": 1, "emenda": 1, "cota": 1, "raiox": 99}
 
