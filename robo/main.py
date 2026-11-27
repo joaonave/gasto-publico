@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import card, cota, homicidios, municipio, noticias, pix, qa, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
+from . import card, cota, homicidios, municipio, noticias, pix, qa, ranking, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -59,7 +59,7 @@ def _candidatos_emendas(estado, log):
         log.append(f"Emendas: {len(pagos)} pagamentos acima do corte | {len(c)} com deputado/senador identificado")
     # Raio-X: primeiro quem está no noticiário (mais citado nas últimas 24h); sem notícia, rodízio
     hoje = datetime.now(BRT)
-    if estado.get("raiox_dia") != hoje.strftime("%Y-%m-%d"):
+    if pontos.LIMITE_DIA.get("raiox", 0) and estado.get("raiox_dia") != hoje.strftime("%Y-%m-%d"):
         planos = emendas_portal.para_planos(todas)
         feitos = {k for k, d in estado.get("raiox_feitos", {}).items()
                   if (hoje - datetime.fromisoformat(d).replace(tzinfo=BRT)).days < 14}
@@ -89,6 +89,11 @@ def _candidatos_emendas(estado, log):
                     f["chave"] = chave
                     c.append(f)
                     break
+    # ranking do dia (rodízio: deputados, senadores, partido, Pix, UF, sem dono)
+    if estado.get("ranking_dia") != hoje.strftime("%Y-%m-%d"):
+        f = ranking.do_dia(estado, todas, cadastro)
+        if f:
+            c.append(f)
     return c
 
 
@@ -123,7 +128,7 @@ def executar(data=None):
     candidatos = []
     for nome, fn in [("PNCP", lambda: _candidatos_pncp(data, estado, log)),
                      ("Emendas", lambda: _candidatos_emendas(estado, log)),
-                     ("Cota", lambda: _candidatos_cota(estado, log))]:
+                     ]:  # cota desligada: post fraco
         try:
             candidatos += fn()
         except Exception as e:  # noqa: BLE001
@@ -222,6 +227,8 @@ def executar(data=None):
         for f in publicados:
             estado["vistos"].append(f["id"])
             estado["vistos"].extend(f.get("ids_extras", []))
+            if f.get("tipo") == "ranking":
+                estado["ranking_dia"], estado["ranking_pos"] = hoje, f["ranking_pos_prox"]
             if f.get("tipo") == "raiox":
                 estado["raiox_dia"] = hoje
                 estado.setdefault("raiox_feitos", {})[f.get("chave", f["id"])] = hoje

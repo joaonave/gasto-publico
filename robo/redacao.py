@@ -129,6 +129,7 @@ COMENTARIOS = {
     "cota": ["Tudo dentro da regra. Esse é o problema.", "Reembolsado com carinho pelo contribuinte.",
              "Mandato dá fome.", "A regra permite. Você paga.", "Trabalho duro exige conforto.",
              "Você pediria reembolso disso no seu trabalho?"],
+    "ranking": ["Seu deputado está na lista?", "Seu senador apareceu aí?", "E o seu, onde ficou?"],
     "raiox": ["Cada um sabe onde planta.", "O mapa do dinheiro conta a história.",
               "Amanhã tem outro.", "Guarde esse nome."],
     "emenda": ["Coincidências da política.", "Generosidade com o dinheiro dos outros.",
@@ -249,6 +250,8 @@ def montar(f, pedir_comentario):
     except Exception as e:  # noqa: BLE001
         print(f"  Grok indisponível ({e}); usando manchete padrão")
 
+    if f.get("comentario_fixo"):
+        comentario, origem = f["comentario_fixo"], "fixo"
     ingresso = _linha_pix(f) or _ingresso(f)
     if ingresso and origem == "padrão":
         comentario = ingresso
@@ -258,16 +261,14 @@ def montar(f, pedir_comentario):
     # valores do Pix/esgoto/por morador vêm de fontes oficiais próprias: fora da checagem de números da manchete
     erros = checar(f, manchete, re.sub(r"R\$ [\d.,]+( (mil|milhão|milhões))?|\d+%", "", comentario)
                    if comentario == ingresso else comentario)
-    embaixo = f"{f['linha_fato']}\n\n{comentario}" if f.get("tipo") == "raiox" and f.get("linha_fato") else comentario
+    embaixo = f"{f['linha_fato']}\n\n{comentario}" if f.get("tipo") in ("raiox", "ranking") and f.get("linha_fato") else comentario
     post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{_hashtags(f)}".rstrip()
     if len(post) - len(f["link"]) + 23 > 280:  # sem espaço: fica só com as fixas
         post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{TAGS_FIXAS}"
     if len(post) - len(f["link"]) + 23 > 280:  # ainda sem espaço: nunca corta o fato
         post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}"
     # X conta link como 23 caracteres
-    tamanho = len(post) - len(f["link"]) + 23
-    if tamanho > 280:
-        erros.append(f"post com {tamanho} caracteres")
+    # (texto com link só é usado se o Buffer recusar a resposta; o post principal é o corpo sem link)
     # corpo sem link (link vai no 1º comentário): mesmo corte de hashtags para caber em 280
     corpo_sem_link = f"{manchete}\n\n{embaixo}\n\n{_hashtags(f)}".strip()
     if _tam(corpo_sem_link) > 280:

@@ -14,9 +14,10 @@ from pathlib import Path
 
 import requests
 
-LIMITE_DIA = {"show": 3, "midia": 2, "inusitada": 2, "emenda": 3, "cota": 3, "raiox": 2}
+# emenda do dia, cota e raio-X desligados (fracos); ranking 1/dia
+LIMITE_DIA = {"show": 4, "midia": 3, "inusitada": 3, "ranking": 1, "emenda": 0, "cota": 0, "raiox": 0}
 TETO_DIA = 10
-INTERESSE = {"show": 1, "midia": 1, "inusitada": 1, "emenda": 1, "cota": 1, "raiox": 99}
+INTERESSE = {"show": 1, "midia": 1, "inusitada": 1, "ranking": 99, "emenda": 1, "cota": 1, "raiox": 99}
 
 IBGE_MUN = "https://servicodados.ibge.gov.br/api/v1/localidades/municipios"
 IBGE_POP = ("https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/-1/variaveis/9324"
@@ -132,7 +133,7 @@ def escolher(candidatos, estado, hoje, pop):
     for f in sorted(candidatos, key=lambda f: (-f["nota"], -f["valor"])):
         if estado["pub_qtd"] + len(escolhidos) >= TETO_DIA:
             break
-        if f not in escolhidos and f["nota"] > 0:
+        if f not in escolhidos and f["nota"] > 0 and LIMITE_DIA.get(categoria(f), 2) > 0:
             escolhidos.append(f)
     # intercala categorias na ordem de publicação
     fila, restantes = [], list(escolhidos)
