@@ -123,7 +123,7 @@ COMENTARIOS = {
     "midia": ["Fazer é caro. Contar que fez, mais ainda.", "A propaganda é sempre ótima.",
               "Se não aparecer, não aconteceu.", "A obra pode atrasar. O anúncio, nunca.",
               "Tudo vai muito bem. Pelo menos na propaganda.", "Você já viu essa propaganda por aí?"],
-    "inusitada": ["Servidor público também tem paladar.", "Tudo pelo bem-estar da população.",
+    "inusitada": ["Tudo pelo bem-estar da população.",
                   "O cardápio do contribuinte é outro.", "Na sua casa tem isso todo dia?",
                   "Alguém aí foi convidado?"],
     "cota": ["Tudo dentro da regra. Esse é o problema.", "Reembolsado com carinho pelo contribuinte.",

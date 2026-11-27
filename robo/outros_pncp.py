@@ -18,7 +18,8 @@ INUSITADAS = {
 }
 INUSITADA_MIN = 20_000
 INUSITADA_EXCLUIR = re.compile(r"seguran[çc]a p[úu]blica|pol[íi]cia|resgate|samu|bombeiro|"
-                               r"merenda|alimenta[çc][ãa]o escolar|PNAE|hospital|\bobras?\b|reforma|engenharia|clube|constru[çc]", re.IGNORECASE)
+                               r"merenda|alimenta[çc][ãa]o escolar|PNAE|hospital|\bobras?\b|reforma|engenharia|clube|constru[çc]|"
+                               r"passeio|roteiro|tur[íi]stic|excurs|viagem", re.IGNORECASE)  # "Roteiro do Vinho" é passeio, não compra de vinho
 
 
 def _orgao(f):
