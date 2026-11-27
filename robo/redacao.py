@@ -213,6 +213,11 @@ def _ingresso(f):
     return banco[sum(map(ord, f.get("id", ""))) % len(banco)].format(v=v)
 
 
+def _tam(t):
+    """Tamanho no X (emoji conta 2)."""
+    return len(t) + sum(1 for c in t if ord(c) > 0xFFFF)
+
+
 def montar(f, pedir_comentario):
     """Monta o post. Se o Grok falhar ou a checagem reprovar, usa a manchete padrão sem comentário."""
     manchete, comentario, origem = _manchete_padrao(f), "", "padrão"
@@ -246,7 +251,14 @@ def montar(f, pedir_comentario):
     tamanho = len(post) - len(f["link"]) + 23
     if tamanho > 280:
         erros.append(f"post com {tamanho} caracteres")
+    # corpo sem link (link vai no 1º comentário): mesmo corte de hashtags para caber em 280
     corpo_sem_link = f"{manchete}\n\n{embaixo}\n\n{_hashtags(f)}".strip()
+    if _tam(corpo_sem_link) > 280:
+        corpo_sem_link = f"{manchete}\n\n{embaixo}\n\n{TAGS_FIXAS}"
+    if _tam(corpo_sem_link) > 280:
+        corpo_sem_link = f"{manchete}\n\n{embaixo}"
+    if _tam(corpo_sem_link) > 280:
+        erros.append(f"post com {_tam(corpo_sem_link)} caracteres")
     return {"texto": post, "corpo_sem_link": corpo_sem_link, "link": f["link"],
             "variante_link": "resposta",  # link no post zera o alcance de conta sem Premium (Buffer, 18,8 mi posts)
             "erros": erros, "origem": origem, "comentario": bool(comentario),
