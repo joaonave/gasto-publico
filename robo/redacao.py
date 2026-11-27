@@ -218,6 +218,22 @@ def _tam(t):
     return len(t) + sum(1 for c in t if ord(c) > 0xFFFF)
 
 
+def _linha_pix(f):
+    """Pix de emenda + esgoto: dois fatos oficiais lado a lado (sem afirmar que o mesmo dinheiro pagou o gasto)."""
+    p = f.get("pix")
+    if not p:
+        return ""
+    from datetime import datetime
+    from .pix import mes_extenso
+    from .shows import valor_manchete
+    v = valor_manchete(p["total"]).replace("MILHÕES", "milhões").replace("MILHÃO", "milhão").replace("MIL", "mil")
+    t = (f"Em {mes_extenso(p['mes'], datetime.now().year)}, a prefeitura recebeu {v} em \"emenda Pix\" "
+         f"do {p['autor']}. Dinheiro sem finalidade definida.")
+    if f.get("sem_esgoto", 0) >= 50:
+        t += f"\n\nE {f['sem_esgoto']:.0f}% dos moradores seguem sem rede de esgoto."
+    return t
+
+
 def montar(f, pedir_comentario):
     """Monta o post. Se o Grok falhar ou a checagem reprovar, usa a manchete padrão sem comentário."""
     manchete, comentario, origem = _manchete_padrao(f), "", "padrão"
@@ -233,13 +249,14 @@ def montar(f, pedir_comentario):
     except Exception as e:  # noqa: BLE001
         print(f"  Grok indisponível ({e}); usando manchete padrão")
 
-    ingresso = _ingresso(f)
+    ingresso = _linha_pix(f) or _ingresso(f)
     if ingresso and origem == "padrão":
         comentario = ingresso
     if not comentario:
         comentario = _comentario_banco(f)
     # o valor por morador é conta do próprio dado: fora da checagem de números
-    erros = checar(f, manchete, comentario.replace(re.search(r"R\$ [\d.,]+", comentario).group(0), "")
+    # valores do Pix/esgoto/por morador vêm de fontes oficiais próprias: fora da checagem de números da manchete
+    erros = checar(f, manchete, re.sub(r"R\$ [\d.,]+( (mil|milhão|milhões))?|\d+%", "", comentario)
                    if comentario == ingresso else comentario)
     embaixo = f"{f['linha_fato']}\n\n{comentario}" if f.get("tipo") == "raiox" and f.get("linha_fato") else comentario
     post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{_hashtags(f)}".rstrip()

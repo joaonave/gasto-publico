@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import card, cota, homicidios, municipio, noticias, qa, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
+from . import card, cota, homicidios, municipio, noticias, pix, qa, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
@@ -42,9 +42,13 @@ def _candidatos_pncp(data, estado, log):
     return c
 
 
+_CTX = {}  # emendas baixadas na rodada (usadas também no cruzamento Pix × prefeitura)
+
+
 def _candidatos_emendas(estado, log):
     cadastro = emendas.parlamentares()
     todas = emendas_portal.baixar()
+    _CTX.update(linhas=todas, cadastro=cadastro)
     ano = datetime.now(BRT).year
     pagos, primeira = emendas_portal.pagamentos_do_dia(todas, RAIZ / "dados" / "emendas_recebido.json", ano)
     c = []
@@ -143,6 +147,20 @@ def executar(data=None):
     pop = pontos.Populacao(RAIZ / "dados" / "populacao.json")
     muni = municipio.Municipios(RAIZ / "dados" / "municipios.json")
     hom = homicidios.Homicidios(pop.por_cod)
+
+    # narrativa: prefeitura que recebeu "emenda Pix" e contratou show/publicidade/compra inusitada, em cidade sem esgoto
+    if _CTX.get("linhas"):
+        idx = pix.indice(_CTX["linhas"])
+        com_pix = 0
+        for f in candidatos:
+            if pontos.categoria(f) in ("show", "midia", "inusitada"):
+                pix.anexar(f, idx, _CTX["cadastro"])
+                if f.get("pix"):
+                    com_pix += 1
+                    d = muni.dados(pop.cod(f))
+                    if "esgoto" in d:
+                        f["sem_esgoto"] = round(100 - d["esgoto"], 1)
+        log.append(f"Emenda Pix: {len(idx)} cidades com Pix em 12 meses | {com_pix} contratos de prefeitura que recebeu Pix")
     escolhidos = pontos.escolher(candidatos, estado, hoje, pop)
     log += ["", f"Candidatos: {len(candidatos)} | escolhidos pelo sistema de pontos: {len(escolhidos)} "
                 f"(já publicados hoje: {estado.get('pub_qtd', 0)})", ""]

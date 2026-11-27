@@ -104,6 +104,10 @@ def nota(f, pop):
             pontos += 2
     elif categoria(f) == "show" and re.search(r"\bMC\b", f.get("fornecedor", ""), re.IGNORECASE):
         pontos += 3
+    if f.get("pix"):  # prefeitura recebeu emenda Pix e gastou nisso
+        pontos += 3
+        if f.get("sem_esgoto", 0) >= 50:
+            pontos += 2
     pontos += f.get("mencoes", 0)  # raio-X: mais citado no noticiário vem primeiro
     f["nota"] = pontos
     return pontos
