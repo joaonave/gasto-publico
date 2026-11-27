@@ -9,6 +9,4 @@ IDHM 0,566, baixo (PNUD, 2010)
 3106200
 {'idhm': 0.81, 'agua': 99.3, 'esgoto': 96.97, 'precario': 2.49}
 📊 BELO HORIZONTE (MG)
-🇩🇰 Parece a Dinamarca: 97,0% com rede de esgoto. Pode gastar.
-(IBGE, Censo 2022)
 IDHM 0,810, muito alto (PNUD, 2010)

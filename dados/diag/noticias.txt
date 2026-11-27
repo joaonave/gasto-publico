@@ -1,60 +1,52 @@
-497 manchetes/tendências
+481 manchetes/tendências
  - G1 | Nova reforma da Previdência e ajuste fiscal 'cívico': conheça as posições de Luiz Carlos Trabuco, futuro minis
  - Valor Econômico | Após 'sim' de Trabuco, Lula anunciará Camilo Santana na Casa Civil, Alckmin na Segurança e mais; veja próximos
- - UOL Notícias | Lula diz que 'não pode gastar dinheiro à toa', mas não vai cortar do pobre - UOL Notícias
- - Folha de S.Paulo | Mônica Bergamo: Deputado do PT pede ao STF bloqueio de R$ 79,3 milhões em emendas de Flávio Bolsonaro - Folha 
+ - G1 | Lula defende ajuste fiscal e diz que para 'país crescer, não se pode gastar dinheiro à toa' - G1
+ - Metrópoles | Alckmin será ministro da Segurança e avalia convidar Gakiya para secretário - Metrópoles
+ - Folha de S.Paulo | Nunes diz que enfeites de Natal de postes serão trocados; 'Também não gostei' - Folha de S.Paulo
  - Brasil 247 | Lula agradece mobilização estudantil e promete fazer “o melhor mandato da vida” - Brasil 247
- - G1 | Após críticas, enfeites de Natal da Avenida Paulista ganham retoques e passam a ter desenhos dos dois lados - 
+ - Agência Brasil | Expectativa de vida no Brasil sobe para 76,9 anos, diz IBGE - Agência Brasil
  - O GLOBO | Lula consulta Cármen Lúcia sobre nomes de mulheres para vaga no STF - O GLOBO
  - G1 | PM faz operação contra o TCP com mais de 100 agentes na Maré; tráfico reage com barricadas em chamas, e 36 esc
- - Agência Brasil | Expectativa de vida no Brasil sobe para 76,9 anos, diz IBGE - Agência Brasil
- - Poder360 | Cleitinho brinca sobre Lula querer viver 130 anos: “Vou pedir saúde” - Poder360
+ - Estado de Minas | Jones Manoel compara Trabuco a Hitler: 'Origem não define posição política' - Estado de Minas
  - G1 | Espanha encerra campanha eleitoral; Sánchez tenta frear a direita e a extrema direita - G1
- - Terra | 'É como chamar Hitler de amigo', diz Zelenski sobre relação de Trump com Putin - Terra
+ - CNN Brasil | "É como ser amigo de Hitler na 2ª Guerra", diz Zelensky sobre Trump e Putin - CNN Brasil
+ - R7 | Mulheres do Afeganistão perdem os nomes e são chamadas de ‘Bibi’, ‘gado’ ou ‘cabra’; entenda - R7
  - Poder360 | Senado da Argentina aprova projeto de lei que suspende eleições primárias - Poder360
- - O GLOBO | Entenda como o câncer avançou contra jornalista mexicano que anunciou a própria morte: 'destruiu minha boca e 
- - G1 | Famílias destinam R$ 284 por mês, em média, ao pagamento de empréstimo, mostra IBGE - G1
- 70 | Flávio Bolsonaro | Mônica Bergamo: Deputado do PT pede ao STF bloqueio de R$ 79,3 milhões em emendas de Flávio Bolsonar
- 10 | Jaques Wagner | Fachin prorroga inquérito de Jaques Wagner por mais 60 dias após pedido da PF - O GLOBO
-  7 | Camilo Santana | Após 'sim' de Trabuco, Lula anunciará Camilo Santana na Casa Civil, Alckmin na Segurança e mais; vej
+ - O GLOBO | Black Friday: papel higiênico lidera entre os mais vendidos no Mercado Livre e na Amazon - O GLOBO
+ 74 | Flávio Bolsonaro | Relator suspende tramitação de emendas parlamentares indicadas por Flávio Bolsonaro - stf noticias
+  8 | Camilo Santana | Após 'sim' de Trabuco, Lula anunciará Camilo Santana na Casa Civil, Alckmin na Segurança e mais; vej
+  8 | Jaques Wagner | Fachin prorroga inquérito de Jaques Wagner por mais 60 dias após pedido da PF - O GLOBO
   6 | Nikolas Ferreira | Disputa entre deputados evangélicos: acusação a Janones mobiliza debates e amplia questionamentos a 
-  3 | José Nelto | Prefeito Vilela e deputado José Nelto buscam novos recursos para a saúde de Aparecida com ministro P
+  4 | Hugo Motta | Hugo Motta diz que redução de emendas parlamentares não é tabu e defende ajuste fiscal - ParaibaOnli
   3 | Marcel van Hattem | Fecomércio-RS homenageia deputado federal e senador eleito Marcel van Hattem - Fecomércio RS
-  3 | Hugo Motta | Juliana e Cleber Chaparral se reúnem com Hugo Motta para discutir projetos para Pernambuco - Blog do
-  3 | Tereza Cristina | Oposição articula revezamento entre Marinho e Tereza Cristina na presidência do Senado - Vero Notíci
-  2 | Julia Zanatta | Deputada Júlia Zanatta anuncia R$ 4,5 milhões em emendas para Tubarão em 2027 - Blog do Prisco
-  2 | Murilo Galdino | Murilo Galdino admite conversas para assumir cargo no governo Lula: “Estamos prontos para qualquer m
-  2 | Pedro Lupion | Pedro Lupion recebe convite de Sergio Moro para comandar supersecretaria de Agricultura e Meio Ambie
-  2 | Hildo Rocha | Hildo Rocha propõe maioria feminina e mandato de dez anos no STF - Vero Notícias
+  3 | Davi Alcolumbre | Davi Alcolumbre recebe prefeitos no Senado e propõe sessão especial para discutir financiamento dos 
+  2 | José Nelto | Prefeito Vilela e deputado José Nelto buscam novos recursos para a saúde de Aparecida com ministro P
+  2 | Murilo Galdino | Murilo Galdino sinaliza retorno de Felipe Leitão ao Republicanos após eleições na ALPB - Fonte 83
+  2 | Marcelo Moraes | Marcelo Moraes antecipa planos para o governo Zucco e explica como manterá mandato de deputado - Por
+  2 | Leo Prates | Justiça Eleitoral aprova sem ressalvas contas de campanha do deputado federal Leo Prates - Bahia sem
   2 | Alessandro Vieira | Senador Alessandro Vieira solicita acesso a relatórios da Polícia Federal sobre ministros do STF no 
-  2 | Davi Alcolumbre | ROSEANN KENNEDY | O presidente Luiz Inácio Lula da Silva está disposto a dar um xeque-mate no embate
+  2 | Bia Kicis | Senadora Bia Kicis afirma que presidência do Senado é essencial para pautas de defesa da vida e famí
+  2 | Tereza Cristina | "Não terá 3º turno comigo no comando do Senado", diz Tereza Cristina - Poder360
+  1 | Julia Zanatta | Deputada Júlia Zanatta anuncia R$ 4,5 milhões em emendas para Tubarão em 2027 - Prefeitura de Tubarã
   1 | Erika Hilton | Deputada Federal Erika Hilton - Portal da Câmara dos Deputados
   1 | Lindbergh Farias | O deputado federal Lindbergh Farias (PT-RJ) comparou em nesta quinta-feira (26) a escolha de Luiz Ca
+  1 | Fernando Monteiro | Fernando Monteiro defende planejamento de longo prazo para garantir segurança hídrica no Brasil - Bl
   1 | Paulinho da Força | Deputado Paulinho da Força afirma que diálogo com Moraes definiu cronograma de votação da Lei da Dos
   1 | Luiz Philippe de Orleans e Bragança | Deputado Luiz Philippe de Orléans e Bragança lança campanha para a presidência da Câmara - Portal VV
-  1 | Marcelo Moraes | Marcelo Moraes antecipa planos para o governo Zucco e explica como manterá mandato de deputado - Por
   1 | Gustavo Gayer | PGR denuncia Gustavo Gayer por suspeita de desvio de cota parlamentar; deputado pode se tornar réu n
-  1 | Sergio Moro | Pedro Lupion recebe convite de Sergio Moro para comandar supersecretaria de Agricultura e Meio Ambie
-  1 | Fernando Monteiro | Fernando Monteiro defende planejamento de longo prazo para garantir segurança hídrica no Brasil - CB
+  1 | André Janones | André Janones anuncia participação em conferência internacional na Itália - ANSA Brasil
   1 | André Figueiredo | Deputado federal André Figueiredo reforça parceria com prefeito Adil Júnior e celebra liderança nas 
-  1 | Coronel Assis | ELEIÇÕES 2028 – Mais votado em VG, Coronel Assis é defendido por Tião da Zaeli para disputar Prefeit
-  1 | Ricardo Ayres | Escolha de Trabuco para a Fazenda ‘de nada adiantará’ sem corte de privilégios nos três Poderes, diz
-  1 | Leo Prates | Justiça Eleitoral aprova sem ressalvas contas de campanha do deputado federal Leo Prates - Bahia sem
-  1 | Átila Lins | Omar Aziz e Átila Lins discutem futuro do Amazonas - PSD - Partido Social Democrático
-  1 | Omar Aziz | Omar Aziz e Átila Lins discutem futuro do Amazonas - PSD - Partido Social Democrático
-  1 | Romero Rodrigues | Ruy Carneiro defende aproximação entre Lucas Ribeiro e Romero Rodrigues - ParaibaOnline
-  1 | Ruy Carneiro | Ruy Carneiro defende aproximação entre Lucas Ribeiro e Romero Rodrigues - ParaibaOnline
-  1 | André Janones | Agência francesa elege André Janones uma das cinco personalidades que marcaram o mundo em 2026 - O G
-  1 | Ricardo Barros | Ricardo Barros elogia escolha do novo ministro da Fazenda; Paulo Martins diz que Lula vai usar Trabu
   1 | Célio Studart | Prefeito de Pentecoste, Vicente do Zuza, recebe retroescavadeira por meio de articulação do vice-pre
-  1 | Saullo Vianna | Saullo Vianna cobra providências do Pará contra fumaça no Amazonas - BNC Amazonas
+  1 | Lucio Mosquini | Deputado Lúcio Mosquini destaca voto contra ajuste fiscal e cobra corte de gastos do governo - Rondô
+  1 | Glauber Braga | A reação de Glauber Braga após ser repostado por Nikolas Ferreira - Revista Fórum
   1 | Randolfe Rodrigues | Randolfe Rodrigues apresenta balanço de sua gestão no Conselho Editorial do Senado — Rádio Senado - 
   1 | Fernando Dueire | Câmara do Recife concede Medalha José Mariano ao senador Fernando Dueire - Blog Edmar Lyra
   1 | Marcelo Castro | Governo Rafael Fonteles: senador Marcelo Castro avalia anúncios do secretariado - Jornal do Piauí | 
   1 | Geraldo Resende | Geraldo Resende explica projeto que prevê perda de herança por fraude contra idosos - Portal da Câma
   1 | Duda Salabert | Duda Salabert propõe aumentar penas para mineração ilegal - PSOL 50
   1 | Clodoaldo Magalhães | Na Black Friday, Clodoaldo Magalhães aconselha a desconfiar de descontos exagerados, pesquisar perfi
+  1 | Pedro Lupion | Republicanos barra candidatura de Pedro Lupion e amplia racha no PL sobre presidência da Câmara - Br
   1 | Damares Alves | Damares Alves e Magno Malta recebem Gilson Machado na Câmara dos Deputados - Blog do Magno
   1 | Magno Malta | Damares Alves e Magno Malta recebem Gilson Machado na Câmara dos Deputados - Blog do Magno
   1 | Eduardo Braga | IFI entrega estudo sobre alíquota da CBS para Eduardo Braga - Sistema FENACON
-  1 | Bia Kicis | Oposição não presidir Senado é ameaça à vida e à família, diz Bia Kicis - Gazeta do Povo
