@@ -3,7 +3,7 @@
   colunas emendas: ['Código da Emenda', 'Código do Autor da Emenda', 'Nome do Autor da Emenda', 'Número da emenda', 'Tipo de Emenda', 'Ano/Mês', 'Código do Favorecido', 'Favorecido', 'Natureza Jurídica', 'Tipo Favorecido', 'UF Favorecido', 'Município Favorecido', 'Valor Recebido']
   mapeamento: {'codigo': 'Código da Emenda', 'ano': 'Ano/Mês', 'tipo': 'Tipo de Emenda', 'autor': 'Nome do Autor da Emenda', 'municipio': 'Município Favorecido', 'uf': 'UF Favorecido', 'localidade': None, 'funcao': None, 'pago': 'Valor Recebido', 'favorecido': 'Favorecido', 'cod_favorecido': 'Código do Favorecido', 'empenhado': None, 'natureza': 'Natureza Jurídica', 'tipo_favorecido': 'Tipo Favorecido'}
   emendas no arquivo: 838284
-parlamentares com pagamento 2026: 578 | total 20.55 bi | fora do cadastro (bancada/comissão/relator/ex): 18.61 bi
+parlamentares com pagamento 2026: 577 | total 20.51 bi | fora do cadastro (bancada/comissão/relator/ex): 18.64 bi
 == TOP 15
    83.2 mi | Sen. Weverton (PDT-MA) | pix 0.0 | finalidade 83.2
    80.2 mi | Sen. Confúcio Moura (MDB-RO) | pix 27.8 | finalidade 52.4
@@ -32,7 +32,7 @@ parlamentares com pagamento 2026: 578 | total 20.55 bi | fora do cadastro (banca
   PDT               440.2 mi |   44.0 mi/parl | 10
   AVANTE            261.2 mi |   43.5 mi/parl | 6
   MDB              1878.2 mi |   41.7 mi/parl | 45
-  PT               2916.8 mi |   39.4 mi/parl | 74
+  PT               2883.3 mi |   39.5 mi/parl | 73
   PSD              2364.8 mi |   38.8 mi/parl | 61
   REDE               77.0 mi |   38.5 mi/parl | 2
   PSDB              765.1 mi |   38.3 mi/parl | 20
@@ -63,7 +63,7 @@ parlamentares com pagamento 2026: 578 | total 20.55 bi | fora do cadastro (banca
   RO                423.0 mi |   38.5 mi/parl | 11
   MA                802.5 mi |   38.2 mi/parl | 21
   PB                569.7 mi |   38.0 mi/parl | 15
-  CE                785.3 mi |   37.4 mi/parl | 21
+  CE                751.8 mi |   37.6 mi/parl | 20
   PE               1045.6 mi |   37.3 mi/parl | 28
   BA               1498.5 mi |   36.5 mi/parl | 41
   RJ               1748.6 mi |   36.4 mi/parl | 48
