@@ -20,6 +20,21 @@ jobs:
           mkdir -p dados/diag
           T="${{ inputs.apagar }}"; [ -z "$T" ] && [ -f dados/apagar.txt ] && T="$(cat dados/apagar.txt)"; case "$T" in apagar:??????????*) python -m robo.fila --apagar "${T#apagar:}" > dados/diag/fila.txt 2>&1 || true;; esac
           python -m robo.fila --listar >> dados/diag/fila.txt 2>&1 || true
+          python - > dados/diag/pix.txt 2>&1 <<'PY' || true
+          from collections import Counter, defaultdict
+          from robo import emendas_portal
+          L = emendas_portal.baixar()
+          print(Counter(r["tipo"] for r in L).most_common(12))
+          pix = [r for r in L if "ESPECIA" in (r["tipo"] or "").upper()]
+          print("pix linhas", len(pix))
+          print(Counter((r["natureza"], r["tipo_favorecido"]) for r in pix).most_common(6))
+          print(Counter(r["ano_mes"] for r in pix if str(r["ano_mes"]).startswith("2026")).most_common(12))
+          for r in pix[-5:]: print({k: r[k] for k in ("autor","favorecido","municipio","uf","ano_mes","pago","funcao")})
+          g = defaultdict(float)
+          for r in pix:
+              if str(r["ano_mes"]).startswith("2026"): g[(r["municipio"], r["uf"])] += r["pago"] or 0
+          print("cidades com pix 2026:", len(g), "total", round(sum(g.values())/1e9, 2), "bi")
+          PY
           python -m robo.noticias > dados/diag/noticias.txt 2>&1 || true
           python -m robo.fila --metricas > dados/diag/metricas.json 2> dados/diag/metricas_erro.txt || true
           python -c "from pathlib import Path; from robo import municipio as m; M=m.Municipios(Path('/tmp/x.json')); [print(c, M.dados(c), m.comentario({'municipio':n,'uf':u}, M.dados(c)), sep='\n') for c,n,u in (('2110302','Santo Antônio dos Lopes','MA'),('3106200','Belo Horizonte','MG'))]" > dados/diag/municipio.txt 2>&1 || true
