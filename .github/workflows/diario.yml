@@ -28,7 +28,7 @@ concurrency:
 jobs:
   rodar:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 55
     steps:
       - uses: actions/checkout@v4
       - name: Bloquear re-run de código antigo
@@ -49,7 +49,7 @@ jobs:
           BUFFER_KEY: ${{ secrets.BUFFER_KEY }}
           PORTAL_KEY: ${{ secrets.PORTAL_KEY }}
           PUBLICAR: "true"
-        run: python -m robo.main
+        run: python -u -m robo.main
       - name: Salvar posts e estado
         run: |
           git config user.name "github-actions[bot]"
