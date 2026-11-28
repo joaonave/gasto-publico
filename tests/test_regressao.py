@@ -276,7 +276,8 @@ def test_valor_da_manchete_do_ranking():
 # ---------- teste integrado (27/11): casos reais ----------
 
 def test_post_com_pix_nao_e_bloqueado_pelo_numero_12():
-    f = dict(_show(), artista="Encantus", orgao="MUNICIPIO DE CORONEL JOAO PESSOA", sem_esgoto=96.6,
+    f = dict(_show(), artista="Encantus", orgao="MUNICIPIO DE CORONEL JOAO PESSOA", municipio="Coronel João Pessoa",
+             uf="RN", sem_esgoto=96.6,
              pix={"autor": "Dep. Robinson Faria (PP-RN)", "total": 398_000, "mes": "202606"})
     p = redacao.montar(f, True)
     assert not p["erros"], p["erros"]
@@ -357,3 +358,35 @@ def test_oeiras_primeiro_comentario_cabe_contando_o_link_inteiro():
     fonte = "\n\nFonte oficial:\nhttps://pncp.gov.br/app/contratos/06553937000170/2026/96"
     r = publicar._caber(dados, fonte)
     assert len(r + fonte) + sum(1 for c in r if ord(c) > 0xFFFF) <= 280
+
+
+def test_orgao_sem_nome_da_cidade_ganha_cidade_na_manchete():
+    # "FUNDO MUNICIPAL DE DESENVOLVIMENTO CULTURAL CONTRATA SHOW..." saiu sem dizer de qual cidade
+    f = dict(_show(), orgao="FUNDO MUNICIPAL DE DESENVOLVIMENTO CULTURAL", municipio="Pirenópolis", uf="GO")
+    m = redacao.montar(f)["corpo_sem_link"].split("\n")[0]
+    assert "PIRENÓPOLIS (GO)" in m
+
+
+def test_portao_final_barra_manchete_sem_cidade():
+    f = _show_real()
+    post = redacao.montar(f)
+    ruim = dict(post, corpo_sem_link=post["corpo_sem_link"].replace("CIDADE X", "ORGAO"))
+    assert "manchete sem a cidade do órgão" in qa.conferencia_final(f, ruim)
+
+
+def test_rodada_extra_nao_agenda_em_cima_de_post_existente(monkeypatch):
+    brt = main.BRT
+    ocupado = datetime(2026, 11, 28, 8, 0, tzinfo=brt)
+
+    def gql(q, v=None):
+        if "organizations" in q:
+            return {"account": {"organizations": [{"id": "o"}]}}
+        return {"posts": {"edges": [{"node": {"status": "scheduled", "dueAt": ocupado.astimezone(_utc()).isoformat()}}]}}
+    monkeypatch.setattr(publicar, "_gql", gql)
+    livres = publicar._sem_colisao([datetime(2026, 11, 28, 8, 0, tzinfo=brt)], {"id": "c"})
+    assert (livres[0] - ocupado).total_seconds() >= 40 * 60
+
+
+def _utc():
+    from datetime import timezone
+    return timezone.utc

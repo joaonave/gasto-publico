@@ -165,6 +165,7 @@ def executar(data=None):
             print(f"  card falhou: {e}")
             nome_card = ""
         post.update(card=nome_card, id=f["id"], ids_extras=f.get("ids_extras", []), categoria=pontos.categoria(f),
+                    manchete=f.get("manchete_padrao") or "",
                     chave_show=_chave_show(f) if f.get("tipo") == "show" else "")
         aprovados.append((f, post))
     muni.salvar()

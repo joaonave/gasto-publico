@@ -9,7 +9,11 @@ def _manchete_padrao(f):
     orgao = f["orgao"].upper()
     if orgao.startswith("MUNICIPIO DE "):
         orgao = "PREFEITURA DE " + orgao[len("MUNICIPIO DE "):]
-    uf = f" ({f['uf']})" if f["uf"] and orgao.startswith("PREFEITURA") else ""
+    # o leitor precisa saber a cidade: órgão que não traz o nome dela ganha "DE CIDADE"
+    cidade = (f.get("municipio") or "").upper()
+    if cidade and _sem_acento(cidade) not in _sem_acento(orgao):
+        orgao = f"{orgao} DE {cidade}"
+    uf = f" ({f['uf']})" if f.get("uf") and f.get("municipio") else ""
     tipo = "SHOW E ESTRUTURA" if f["inclui_estrutura"] else "SHOW"
     de = f" DE {f['artista'].upper()}" if f.get("artista") else ""
     # contrato assinado não é pagamento: "CONTRATA", nunca "PAGA"

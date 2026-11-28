@@ -99,6 +99,30 @@ def _caber(dados, sufixo=""):
     return "" if not linhas or so_cabecalho else "\n".join(linhas)
 
 
+def _sem_colisao(slots, canal, folga_min=40):
+    """Não agenda em cima de post que já está na fila (rodada extra do mesmo dia)."""
+    try:
+        q = ('query { posts(first: 100, input: { organizationId: %s, filter: { channelIds: [%s] } }) '
+             '{ edges { node { status dueAt } } } }')
+        orgs = _gql("query { account { organizations { id } } }")["account"]["organizations"]
+        ocupados = []
+        for org in orgs:
+            for e in _gql(q % (json.dumps(org["id"]), json.dumps(canal["id"])))["posts"]["edges"]:
+                n = e["node"]
+                if str(n.get("status", "")).lower() in ("scheduled", "queued", "pending") and n.get("dueAt"):
+                    ocupados.append(datetime.fromisoformat(n["dueAt"].replace("Z", "+00:00")))
+    except Exception as e:  # noqa: BLE001
+        print(f"  fila indisponível para checar horários ({str(e)[:80]})")
+        return slots
+    livres = []
+    for t in slots:
+        limite = t.replace(hour=FIM_H, minute=0)
+        while any(abs((t - o).total_seconds()) < folga_min * 60 for o in ocupados + livres) and t < limite:
+            t += timedelta(minutes=15)
+        livres.append(t)
+    return livres
+
+
 def agendar(posts, dia=None):
     """posts: lista de dicts com texto, corpo_sem_link, link, variante_link e card (caminho no repositório).
     Tenta com imagem e com link na resposta; se o Buffer recusar, simplifica até publicar."""
@@ -108,7 +132,7 @@ def agendar(posts, dia=None):
     canal = canal_x()
     print(f"  Buffer: canal {canal['name']} ({canal['service']})")
     saida = []
-    for post, quando in zip(posts, horarios(len(posts), dia=dia)):
+    for post, quando in zip(posts, _sem_colisao(horarios(len(posts), dia=dia), canal)):
         due = quando.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
         tentativas = []
         dados = post.get("dados_municipio") or ""

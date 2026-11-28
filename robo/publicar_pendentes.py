@@ -44,6 +44,9 @@ def _devolver_falhas(posts, resultados):
             e["pub_cat"][cat] -= 1
         if p.get("categoria") == "ranking":
             e["ranking_dia"] = None
+        for dia, lst in e.get("manchetes_dia", {}).items():  # a manchete não pode barrar a nova tentativa
+            if p.get("manchete") in lst:
+                lst.remove(p["manchete"])
     arq.write_text(json.dumps(e, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"  {len(falhas)} post(s) recusado(s) pelo Buffer voltam a concorrer")
 

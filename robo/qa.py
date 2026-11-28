@@ -92,8 +92,8 @@ def conferencia_final(f, post):
         if re.search(r"\bPAG(A|OU|AR|AM)\b", _sa(manchete)):
             erros.append("contrato não é pagamento (PAGA na manchete)")
         # município da manchete é o do órgão
-        if f.get("municipio") and redacao_eh_prefeitura(f.get("orgao")) and _sa(f["municipio"]) not in _sa(manchete):
-            erros.append("município da manchete diferente do órgão")
+        if not f.get("municipio") or _sa(f["municipio"]) not in _sa(manchete):
+            erros.append("manchete sem a cidade do órgão")
 
     if tipo == "show":
         art = f.get("artista") or ""
@@ -114,7 +114,3 @@ def conferencia_final(f, post):
         erros.append("ranking sem link do Portal")
     return erros
 
-
-def redacao_eh_prefeitura(orgao):
-    from .redacao import eh_prefeitura
-    return eh_prefeitura(orgao)
