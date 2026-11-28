@@ -91,16 +91,30 @@ def _brl(v):
     return "R$ " + f"{v:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
+_UNIDADES = {"ser": "serviço", "serv": "serviço", "sv": "serviço", "uni": "unidade", "un": "unidade",
+             "und": "unidade", "unid": "unidade", "cx": "caixa", "gf": "garrafa", "grf": "garrafa", "kg": "kg"}
+
+
+def _corta(t, n=70):
+    t = t.strip()
+    if len(t) <= n:
+        return t.rstrip(" ,.;-")
+    return t[:n].rsplit(" ", 1)[0].rstrip(" ,.;-:") + "…"
+
+
 def linha(item):
-    """Linha do 1º comentário com o item confirmado (preço unitário é o estimado na compra)."""
+    """Linha do 1º comentário com o item confirmado (preço é o estimado na compra)."""
     if not item:
         return ""
     q = item["quantidade"]
+    desc = _corta(item["descricao"])
+    if not item["unitario"] or not q:
+        return f"🧾 Item: {desc}"
+    if q == 1:
+        return f"🧾 Item: {desc} (estimado: {_brl(item['unitario'])})"
     qtd = f"{q:,.0f}".replace(",", ".") if q == int(q) else f"{q:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    desc = item["descricao"][:70].rstrip(" ,.;-")
-    un = (item["unidade"] or "un").lower()
+    un = re.sub(r"\s*\(.*\)", "", (item["unidade"] or "un")).strip().lower()
+    un = _UNIDADES.get(un, un)
     if q > 1 and un.isalpha() and len(un) > 3 and not un.endswith("s"):
         un += "s"
-    if item["unitario"] and q:
-        return f"🧾 Item: {desc}. {qtd} {un} a {_brl(item['unitario'])} cada (estimado)"
-    return f"🧾 Item: {desc}"
+    return f"🧾 Item: {desc}. {qtd} {un} a {_brl(item['unitario'])} cada (estimado)"

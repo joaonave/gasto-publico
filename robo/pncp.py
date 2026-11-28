@@ -7,8 +7,13 @@ from . import config
 
 def _get(params):
     for tentativa in range(config.PNCP_TENTATIVAS):
-        r = requests.get(config.PNCP_BASE, params=params, timeout=60,
-                         headers={"Accept": "application/json"})
+        try:
+            r = requests.get(config.PNCP_BASE, params=params, timeout=60,
+                             headers={"Accept": "application/json"})
+        except requests.exceptions.RequestException as e:  # conexão caiu: espera e tenta de novo
+            print(f"  PNCP conexão: {str(e)[:80]}; nova tentativa")
+            time.sleep(15)
+            continue
         if r.status_code == 429:
             print(f"  PNCP 429, aguardando {config.PNCP_ESPERA_429_SEG}s")
             time.sleep(config.PNCP_ESPERA_429_SEG)

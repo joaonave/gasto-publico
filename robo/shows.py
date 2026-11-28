@@ -58,7 +58,8 @@ _PARA = {"NO", "NA", "NOS", "NAS", "PARA", "EM", "DIA", "DIAS", "PREVISTO", "PRE
          "COM", "REALIZADO", "REALIZADA", "REALIZAR", "EVENTO", "FESTA", "FESTEJOS", "FESTIVIDADES", "ANIVERSARIO",
          "CARNAVAL", "REVEILLON", "NATAL", "PROGRAMACAO", "EMANCIPACAO", "MUNICIPIO", "CIDADE", "VALOR", "REFERENTE",
          "CONFORME", "SEGUNDO", "QUE", "SENDO", "REPRESENTADO", "REPRESENTADA", "POR", "ATRAVES", "VIA", "COMO",
-         "SHOW", "SHOWS", "APRESENTACAO", "OBJETO", "LOCAL", "PRACA", "PARQUE", "ESTADIO", "AVENIDA", "RUA"}
+         "SHOW", "SHOWS", "APRESENTACAO", "OBJETO", "LOCAL", "PRACA", "PARQUE", "ESTADIO", "AVENIDA", "RUA",
+         "RENOME", "NACIONAL", "REGIONAL", "INTERNACIONAL", "-", "–"}
 _CONECT_FIM = {"E", "&", "DE", "DA", "DO", "DOS", "DAS", "A", "O"}
 # fornecedor cujo "nome próprio" é palavra comum de evento: não serve como nome de artista
 _FORNECEDOR_COMUM = re.compile(r"^(S[AÃ]O JO[AÃ]O|CIDADE|CARNAVAL|NATAL|FESTA|FESTAS|BRASIL|NORDESTE|REGIONAL|"
@@ -68,7 +69,7 @@ _FORNECEDOR_COMUM = re.compile(r"^(S[AÃ]O JO[AÃ]O|CIDADE|CARNAVAL|NATAL|FESTA|
 # prefixo em qualquer caixa; o nome tem que começar com maiúscula
 _NOMEADO = re.compile(
     r"(?i:\b(?:d[oa]s?|pel[oa]s?|com\s+[oa]s?|com)\s+(?:artistas?|cantor(?:a|es|as)?|bandas?|grupos?(?: musical)?|"
-    r"duplas?(?: sertanejas?)?|mc|dj)\s+)"
+    r"duplas?(?: sertanejas?)?|mc|dj)\s+(?:de\s+renome\s+(?:nacional|regional|internacional)\s*[-–:,]?\s*)?)"
     r"((?:DJ |MC |Dj |Mc )?[A-ZÀ-Ý0-9][\wÀ-ÿ'&]*(?:\s+(?:[A-ZÀ-Ý0-9&][\wÀ-ÿ'&]*|e|&|de|da|do|dos|das))*)")
 # antes das aspas tem que vir cantor/banda/artista/show ("evento “Carnaval 2027”" não é artista)
 _ASPAS_ARTISTA = re.compile(r"(?i:(?:artistas?|cantor(?:a|es|as)?|bandas?|grupos?|duplas?(?: sertanejas?)?|mc|dj|"
@@ -80,6 +81,10 @@ _VARIOS = re.compile(r"(?i:\b(?:d[oa]s|pel[oa]s)\s+(?:artistas|bandas|cantor(?:e
 
 
 def _limpar_nome(nome):
+    # "DUPLA DE RENOME NACIONAL - DIEGO & ARNALDO" → "DIEGO & ARNALDO"
+    nome = re.sub(r"(?i)^(?:de\s+)?renome\s+(?:nacional|regional|internacional)\s*[-–:,]?\s*", "", nome)
+    while nome.split() and _sem_acento(nome.split()[0]) in _CONECT_FIM:
+        nome = nome.split(None, 1)[1] if len(nome.split()) > 1 else ""
     nome = re.sub(r"(?i)\s+(?:e|&)\s+(?:sua\s+)?banda\b.*$", "", nome)  # "GUSTTAVO LIMA E BANDA" → "GUSTTAVO LIMA"
     toks = nome.replace(",", " , ").split()
     out = []

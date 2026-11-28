@@ -108,7 +108,7 @@ def comentario(f, d, populacao=None, hom=None, anos_hom=""):
                        f"{vezes}x a média do país (DataSUS)"))
     if "esgoto" in d:
         sem = 100 - d["esgoto"]
-        if sem >= 20:
+        if sem >= 20 and not (f.get("pix") and f.get("sem_esgoto", 0) >= 50):  # já está no post
             choque.append((sem, f"🚽 {_pct(sem)} dos moradores sem rede de esgoto"))
     if d.get("precario", 0) >= 5:
         choque.append((d["precario"], f"💩 {_pct(d['precario'])} despejam em fossa rudimentar, vala, rio ou não têm banheiro"))

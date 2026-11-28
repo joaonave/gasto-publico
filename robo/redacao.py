@@ -249,7 +249,7 @@ def _linha_pix(f):
     from .shows import valor_manchete
     v = valor_manchete(p["total"]).replace("MILHÕES", "milhões").replace("MILHÃO", "milhão").replace("MIL", "mil")
     # total de 12 meses (não "em junho"): é a soma da janela
-    t = (f"Nos últimos 12 meses, a prefeitura recebeu {v} em \"emenda Pix\" do {p['autor']}, "
+    t = (f"Nos últimos 12 meses, a prefeitura recebeu {v} em \"emenda Pix\" enviada por {p['autor']}, "
          f"direto no caixa.")
     if f.get("sem_esgoto", 0) >= 50:
         t += f"\n\nE {f['sem_esgoto']:.0f}% dos moradores seguem sem rede de esgoto."
@@ -280,8 +280,8 @@ def montar(f, pedir_comentario):
         comentario = _comentario_banco(f)
     # o valor por morador é conta do próprio dado: fora da checagem de números
     # valores do Pix/esgoto/por morador vêm de fontes oficiais próprias: fora da checagem de números da manchete
-    erros = checar(f, manchete, re.sub(r"R\$ [\d.,]+( (mil|milhão|milhões))?|\d+%", "", comentario)
-                   if comentario == ingresso else comentario)
+    # números da linha do Pix/esgoto/por morador vêm de fontes oficiais próprias: fora da checagem da manchete
+    erros = checar(f, manchete, re.sub(r"\d", "", comentario) if comentario == ingresso else comentario)
     embaixo = f"{f['linha_fato']}\n\n{comentario}" if f.get("tipo") in ("raiox", "ranking") and f.get("linha_fato") else comentario
     post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{_hashtags(f)}".rstrip()
     if len(post) - len(f["link"]) + 23 > 280:  # sem espaço: fica só com as fixas

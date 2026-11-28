@@ -289,3 +289,34 @@ def test_post_novo_sem_hashtag_nao_e_apagado_da_fila():
 
 def test_valor_da_manchete_do_ranking():
     assert ranking._vm(300_000) == "R$ 300 MIL" and ranking._vm(1.5e6) == "R$ 1,5 MILHÃO"
+
+
+# ---------- teste integrado (27/11): casos reais ----------
+
+def test_post_com_pix_nao_e_bloqueado_pelo_numero_12():
+    f = dict(_show(), artista="Encantus", orgao="MUNICIPIO DE CORONEL JOAO PESSOA", sem_esgoto=96.6,
+             pix={"autor": "Dep. Robinson Faria (PP-RN)", "total": 398_000, "mes": "202606"})
+    p = redacao.montar(f, True)
+    assert not p["erros"], p["erros"]
+    assert "emenda Pix" in p["corpo_sem_link"] and redacao._tam(p["corpo_sem_link"]) <= 280
+
+
+def test_floreal_dupla_de_renome_nacional():
+    obj = ("Contratação de Empresa especializada na realização de SHOW MUSICAL - ARTÍSTICO – COM A DUPLA DE RENOME "
+           "NACIONAL - DIEGO & ARNALDO, que acontecerá no dia 28 de Novembro de 2026")
+    assert shows.artista(obj, "") == "DIEGO & ARNALDO"
+
+
+def test_linha_do_item_sem_palavra_cortada_nem_unidade_abreviada():
+    it = itens._resumo({"descricao": "Serviços artísticos, de Atração Musical para apresentação durante os festejos da "
+                                     "Emancipação Política", "quantidade": 1, "unidadeMedida": "ser",
+                        "valorUnitarioEstimado": 750000, "valorTotal": 750000})
+    t = itens.linha(it)
+    assert "1 ser " not in t and t.endswith("(estimado: R$ 750.000,00)") and " os f." not in t
+
+
+def test_esgoto_nao_repete_no_comentario_quando_esta_no_post():
+    f = {"municipio": "Coronel João Pessoa", "uf": "RN", "tipo": "show", "id": "a", "orgao": "MUNICIPIO DE X",
+         "pix": {"total": 1}, "sem_esgoto": 96.6}
+    t = municipio.comentario(f, {"idhm": 0.578, "agua": 32.6, "esgoto": 3.4, "precario": 82.9}, 4279)
+    assert "🚽" not in t and "💩" in t
