@@ -72,9 +72,10 @@ def _mutacao(post, canal_id, due, com_imagem=True, com_thread=True):
 
 
 def _tam_x(texto):
-    """Tamanho no X: link conta 23."""
+    """Tamanho conservador (X e Buffer): link pelo tamanho real (mín. 23), emoji conta 2."""
     import re
-    t = re.sub(r"https?://\S+", "x" * 23, texto)
+    # o X conta link como 23, mas o Buffer recusa a thread contando o link inteiro: usa o maior
+    t = re.sub(r"https?://\S+", lambda m: "x" * max(23, len(m.group(0))), texto)
     return len(t) + sum(1 for c in t if ord(c) > 0xFFFF)  # emoji conta 2
 
 

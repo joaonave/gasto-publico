@@ -347,3 +347,13 @@ def test_buffer_recusou_post_volta_a_concorrer(tmp_path, monkeypatch):
                         [("t", "erro: limit"), ("t", "agendado 28/11 08:00")])
     e = json.loads(est.read_text())
     assert e["vistos"] == ["b"] and e["pub_qtd"] == 1 and e["pub_cat"]["show"] == 1 and e["shows_vistos"] == []
+
+
+def test_oeiras_primeiro_comentario_cabe_contando_o_link_inteiro():
+    # Buffer recusou: "Thread item 2 exceeds the 280 character limit" (link contado pelo tamanho real)
+    dados = ("🧾 Item: CONTRATAÇÃO DA APRESENTAÇÃO ARTÍSTICA DA CANTORA MARA PAVANELLY, PARA… (estimado: R$ 200.000,00)\n"
+             "📊 OEIRAS (PI)\n💩 51,6% despejam em fossa rudimentar, vala, rio ou não têm banheiro\n"
+             "🚱 11,2% sem água da rede geral\n(IBGE, Censo 2022)\nIDHM 0,634, médio (PNUD, 2010)\nPopulação: 39.275 (IBGE)")
+    fonte = "\n\nFonte oficial:\nhttps://pncp.gov.br/app/contratos/06553937000170/2026/96"
+    r = publicar._caber(dados, fonte)
+    assert len(r + fonte) + sum(1 for c in r if ord(c) > 0xFFFF) <= 280
