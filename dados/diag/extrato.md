@@ -1,6 +1,46 @@
-# Emendas que citam 'BR-265' – autor REGINALDO LOPES
+# Emendas que citam 'RODOVI' – autor REGINALDO LOPES
 
 Fonte: Portal da Transparência, arquivo de emendas (empenhado e pago, incluindo restos a pagar pagos).
 
 
 ## Todos os autores com emenda que cita o termo (empenhado | pago)
+- Sem informação: R$ 2476.79 mi | R$ 2267.20 mi
+- BANCADA DO ESPIRITO SANTO: R$ 414.44 mi | R$ 403.39 mi
+- BANCADA DO MATO GROSSO DO SUL: R$ 350.16 mi | R$ 349.53 mi
+- BANCADA DO RIO GRANDE DO SUL: R$ 247.09 mi | R$ 240.05 mi
+- BANCADA DE RONDONIA: R$ 199.37 mi | R$ 190.49 mi
+- BANCADA DO ACRE: R$ 161.75 mi | R$ 161.18 mi
+- BANCADA DE RORAIMA: R$ 161.22 mi | R$ 160.26 mi
+- RELATOR GERAL: R$ 189.36 mi | R$ 159.46 mi
+- BANCADA DO RIO GRANDE DO NORTE: R$ 155.77 mi | R$ 154.15 mi
+- BANCADA DE SANTA CATARINA: R$ 82.01 mi | R$ 78.50 mi
+- COM. MISTA, PLAN.ORC.E FISCALIZACAO: R$ 82.00 mi | R$ 76.84 mi
+- BANCADA DO PIAUI: R$ 77.83 mi | R$ 75.87 mi
+- BANCADA DO MARANHAO: R$ 145.23 mi | R$ 62.31 mi
+- BANCADA DO PARA: R$ 119.34 mi | R$ 52.08 mi
+- BANCADA DE ALAGOAS: R$ 59.46 mi | R$ 44.70 mi
+- COM. SERV.DE INFRA-ESTRUTURA: R$ 82.00 mi | R$ 31.94 mi
+- BANCADA DO AMAPA: R$ 49.15 mi | R$ 29.60 mi
+- BANCADA DA PARAIBA: R$ 29.50 mi | R$ 29.50 mi
+- COMISSAO DE SERVICOS DE INFRA-ESTRUTURA - CI: R$ 28.00 mi | R$ 27.48 mi
+- COMISSAO DE VIACAO E TRANSPORTES - CVT: R$ 20.00 mi | R$ 19.87 mi
+- BANCADA DA BAHIA: R$ 15.84 mi | R$ 15.04 mi
+- BANCADA DO DISTRITO FEDERAL: R$ 30.35 mi | R$ 11.00 mi
+- FERNANDO BEZERRA COELHO: R$ 7.97 mi | R$ 7.97 mi
+- COM. VIACAO E TRANSPORTES: R$ 52.00 mi | R$ 2.00 mi
+- ALEXANDRE VALLE: R$ 2.70 mi | R$ 1.92 mi
+- BANCADA DE GOIAS: R$ 1.65 mi | R$ 1.65 mi
+- BANCADA DO PARANA: R$ 2.18 mi | R$ 1.02 mi
+- COM. DESENV. URBANO: R$ 1.00 mi | R$ 1.00 mi
+- FELIPE CARRERAS: R$ 1.00 mi | R$ 1.00 mi
+- JADER BARBALHO: R$ 0.75 mi | R$ 0.75 mi
+- JORGE KAJURU: R$ 0.50 mi | R$ 0.49 mi
+- GILBERTO NASCIMENTO: R$ 0.26 mi | R$ 0.26 mi
+- LEONARDO MONTEIRO: R$ 0.25 mi | R$ 0.25 mi
+- COMISSAO DE INTEGRACAO NACIONAL, DESENVOLVIMENTO R: R$ 0.39 mi | R$ 0.20 mi
+- GONZAGA PATRIOTA: R$ 0.20 mi | R$ 0.19 mi
+- WELLINGTON FAGUNDES: R$ 0.50 mi | R$ 0.10 mi
+- ARMANDO VERGILIO: R$ 0.07 mi | R$ 0.07 mi
+- BANCADA DE PERNAMBUCO: R$ 7.45 mi | R$ 0.00 mi
+- JUSSARA LIMA: R$ 2.00 mi | R$ 0.00 mi
+- JORGE GOETTEN: R$ 1.00 mi | R$ 0.00 mi
