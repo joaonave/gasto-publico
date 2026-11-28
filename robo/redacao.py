@@ -1,66 +1,7 @@
-"""Redação do post (API do Grok) e checagem automática antes de publicar."""
-import json
-import os
-import re
-
-import requests
-
-from . import config
-
-ESTILO = """Você escreve posts para o perfil @ImpostoFoiPra no X.
-Voz: um brasileiro comum, desiludido com o uso do dinheiro público. Cansado, irônico, nunca histérico.
-
-Formato obrigatório (responda só com JSON):
-{"manchete": "...", "comentario": "..."}
-
-Regras da manchete:
-- TODA EM CAIXA ALTA, uma frase, sem emoji, até 140 caracteres.
-- Diz o fato: quem contratou, quanto, para quê. Contrato assinado NÃO é pagamento: nunca use PAGA/PAGOU. Ex.: PREFEITURA DE X (UF) CONTRATA SHOW DE FULANO POR R$ 680 MIL
-- Use o valor EXATAMENTE como vem em "valor_manchete". Não escreva nenhum outro valor em R$.
-- Se o órgão for "MUNICIPIO DE X", chame de "PREFEITURA DE X".
-- Nome de artista só se estiver escrito no objeto do contrato. Se não estiver, diga "SHOW".
-- Se "inclui_estrutura" for true, diga "SHOW E ESTRUTURA", não "CACHÊ".
-
-Regras do comentário (só quando "pedir_comentario" for true; senão devolva ""):
-- Uma ou duas frases curtas, minúsculas normais, tom de quem já viu isso mil vezes.
-- Ironia ou contraste. Ex.: "Mas a festa vai ser boa." / "Prioridades."
-- PROIBIDO: acusar crime, falar em corrupção, desvio, roubo, superfaturamento; inventar fato ou número;
-  palavrões; mencionar partido. Não use nenhum número no comentário.
+"""Redação do post: manchete padrão em caixa alta + comentário (Pix/esgoto, por morador ou banco) + hashtags.
+Sem IA: todo texto sai de modelo fixo preenchido com o dado oficial.
 """
-
-
-def _grok(fatos, pedir_comentario):
-    chave = os.environ.get("XAI_KEY")
-    if not chave:
-        return None
-    if fatos.get("manchete_padrao"):
-        if not pedir_comentario:
-            return None
-        entrada = {"manchete": fatos["manchete_padrao"], "contexto": fatos.get("contexto", ""),
-                   "pedir_comentario": True,
-                   "instrucao": "Devolva a manchete exatamente igual e escreva só o comentário."}
-    else:
-        entrada = {k: fatos[k] for k in ("orgao", "municipio", "uf", "fornecedor", "objeto",
-                                          "valor_manchete", "inclui_estrutura")}
-        entrada["pedir_comentario"] = pedir_comentario
-    r = requests.post(
-        config.XAI_URL,
-        headers={"Authorization": f"Bearer {chave}"},
-        json={
-            "model": os.environ.get("XAI_MODELO", config.XAI_MODELO),
-            "messages": [
-                {"role": "system", "content": ESTILO},
-                {"role": "user", "content": json.dumps(entrada, ensure_ascii=False)},
-            ],
-            "temperature": 0.7,
-            "response_format": {"type": "json_object"},
-        },
-        timeout=90,
-    )
-    r.raise_for_status()
-    texto = r.json()["choices"][0]["message"]["content"]
-    return json.loads(texto)
-
+import re
 
 def _manchete_padrao(f):
     if f.get("manchete_padrao"):
@@ -87,9 +28,7 @@ def _linha_fato(f):
     return " | ".join(p for p in partes if p)
 
 
-LINKS_OK = ("https://pncp.gov.br/", "https://api.transferegov.gestao.gov.br/",
-            "https://portaldatransparencia.gov.br/", "https://www.camara.leg.br/",
-            "https://camara.leg.br/", "https://www.senado.leg.br/")
+LINKS_OK = ("https://pncp.gov.br/", "https://portaldatransparencia.gov.br/")
 
 PROIBIDAS = re.compile(r"corrup|desvi|roub|superfatur|propina|ladr|crime|fraud", re.IGNORECASE)
 
@@ -136,19 +75,16 @@ COMENTARIOS = {
     "inusitada": ["Tudo pelo bem-estar da população.", "Na sua casa tem isso todo dia?", "Prioridades."],
     "inusitada_comida": ["O cardápio do contribuinte é outro.", "Na sua casa tem isso todo dia?",
                          "Alguém aí foi convidado?"],
-    "cota": ["Tudo dentro da regra. Esse é o problema.", "Reembolsado com carinho pelo contribuinte.",
-             "Mandato dá fome.", "A regra permite. Você paga.", "Trabalho duro exige conforto.",
-             "Você pediria reembolso disso no seu trabalho?"],
     "ranking": ["Seu deputado está na lista?", "Seu senador apareceu aí?", "E o seu, onde ficou?"],
-    "raiox": ["Cada um sabe onde planta.", "O mapa do dinheiro conta a história.",
-              "Amanhã tem outro.", "Guarde esse nome."],
-    "emenda": ["Coincidências da política.", "Generosidade com o dinheiro dos outros.",
-               "O mapa do voto explica muita coisa.", "Brasília manda. A gente paga.",
-               "Cada um com suas prioridades.", "Seu deputado mandou verba pra sua cidade?"],
 }
 
 
 COMIDA = {"LAGOSTA", "CAMARÃO", "VINHO", "ESPUMANTE", "UÍSQUE", "CAVIAR", "PICANHA", "FILÉ MIGNON", "BACALHAU"}
+
+
+def eh_municipal(orgao):
+    """Órgão municipal (prefeitura, câmara, fundo, autarquia): o post é sobre a cidade."""
+    return bool(re.search(r"munic|prefeit", orgao or "", re.IGNORECASE))
 
 
 def eh_prefeitura(orgao):
@@ -167,7 +103,7 @@ def _comentario_banco(f):
     return lista[sum(map(ord, str(f.get("id", "")))) % len(lista)]
 
 
-TAG_TIPO = {"cota": "#CotaParlamentar", "emenda": "#EmendasParlamentares"}  # só temas que as pessoas buscam
+TAG_TIPO = {"ranking": "#EmendasParlamentares"}  # só temas que as pessoas buscam
 
 ESTADOS = {"AC": "Acre", "AL": "Alagoas", "AP": "Amapa", "AM": "Amazonas", "BA": "Bahia", "CE": "Ceara",
            "DF": "DistritoFederal", "ES": "EspiritoSanto", "GO": "Goias", "MA": "Maranhao", "MT": "MatoGrosso",
@@ -175,14 +111,6 @@ ESTADOS = {"AC": "Acre", "AL": "Alagoas", "AP": "Amapa", "AM": "Amazonas", "BA":
            "PE": "Pernambuco", "PI": "Piaui", "RJ": "RioDeJaneiro", "RN": "RioGrandeDoNorte",
            "RS": "RioGrandeDoSul", "RO": "Rondonia", "RR": "Roraima", "SC": "SantaCatarina", "SP": "SaoPaulo",
            "SE": "Sergipe", "TO": "Tocantins"}
-
-
-# Teste A/B/C: o X não mostra volume de hashtag; o robô alterna os conjuntos e mede pelo Buffer.
-VARIANTES_TAG = ["local", "politica", "sem"]
-
-
-def _variante(f):
-    return VARIANTES_TAG[sum(map(ord, str(f.get("id", "")))) % len(VARIANTES_TAG)]
 
 
 TAGS_FIXAS = "#GastoPublico #emendas #congresso #imposto"
@@ -256,49 +184,23 @@ def _linha_pix(f):
     return t
 
 
-def montar(f, pedir_comentario):
-    """Monta o post. Se o Grok falhar ou a checagem reprovar, usa a manchete padrão sem comentário."""
-    manchete, comentario, origem = _manchete_padrao(f), "", "padrão"
-    try:
-        g = _grok(f, pedir_comentario)
-        if g:
-            m = f.get("manchete_padrao") or (g.get("manchete") or "").strip()
-            c = (g.get("comentario") or "").strip() if pedir_comentario else ""
-            if m and not checar(f, m, c):
-                manchete, comentario, origem = m, c, "grok"
-            else:
-                print(f"  checagem reprovou texto do Grok: {checar(f, m, c)}")
-    except Exception as e:  # noqa: BLE001
-        print(f"  Grok indisponível ({e}); usando manchete padrão")
-
-    if f.get("comentario_fixo"):
-        comentario, origem = f["comentario_fixo"], "fixo"
+def montar(f, pedir_comentario=True):
+    """Monta o post. Corpo (vai ao X) sem link; o link vai no 1º comentário."""
+    manchete = _manchete_padrao(f)
     ingresso = _linha_pix(f) or _ingresso(f)
-    if ingresso and origem == "padrão":
-        comentario = ingresso
-    if not comentario:
-        comentario = _comentario_banco(f)
-    # o valor por morador é conta do próprio dado: fora da checagem de números
-    # valores do Pix/esgoto/por morador vêm de fontes oficiais próprias: fora da checagem de números da manchete
+    comentario = f.get("comentario_fixo") or ingresso or _comentario_banco(f)
     # números da linha do Pix/esgoto/por morador vêm de fontes oficiais próprias: fora da checagem da manchete
     erros = checar(f, manchete, re.sub(r"\d", "", comentario) if comentario == ingresso else comentario)
-    embaixo = f"{f['linha_fato']}\n\n{comentario}" if f.get("tipo") in ("raiox", "ranking") and f.get("linha_fato") else comentario
-    post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{_hashtags(f)}".rstrip()
-    if len(post) - len(f["link"]) + 23 > 280:  # sem espaço: fica só com as fixas
-        post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n{TAGS_FIXAS}"
-    if len(post) - len(f["link"]) + 23 > 280:  # ainda sem espaço: nunca corta o fato
-        post = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}"
-    # X conta link como 23 caracteres
-    # (texto com link só é usado se o Buffer recusar a resposta; o post principal é o corpo sem link)
-    # corpo sem link (link vai no 1º comentário): mesmo corte de hashtags para caber em 280
-    corpo_sem_link = f"{manchete}\n\n{embaixo}\n\n{_hashtags(f)}".strip()
-    if _tam(corpo_sem_link) > 280:
-        corpo_sem_link = f"{manchete}\n\n{embaixo}\n\n{TAGS_FIXAS}"
-    if _tam(corpo_sem_link) > 280:
-        corpo_sem_link = f"{manchete}\n\n{embaixo}"
-    if _tam(corpo_sem_link) > 280:
+    embaixo = f"{f['linha_fato']}\n\n{comentario}" if f.get("tipo") == "ranking" and f.get("linha_fato") else comentario
+    # hashtags: completas → fixas → só #GastoPublico (marca do formato atual; nunca some)
+    corpo_sem_link = ""
+    for tags in (_hashtags(f), TAGS_FIXAS, "#GastoPublico"):
+        corpo_sem_link = f"{manchete}\n\n{embaixo}\n\n{tags}"
+        if _tam(corpo_sem_link) <= 280:
+            break
+    else:
         erros.append(f"post com {_tam(corpo_sem_link)} caracteres")
-    return {"texto": post, "corpo_sem_link": corpo_sem_link, "link": f["link"],
-            "variante_link": "resposta",  # link no post zera o alcance de conta sem Premium (Buffer, 18,8 mi posts)
-            "erros": erros, "origem": origem, "comentario": bool(comentario),
-            "variante_tag": _variante(f)}
+    # reserva (só se o Buffer recusar a resposta): link no próprio post
+    texto = f"{manchete}\n\n{embaixo}\n\n🔗 {f['link']}\n#GastoPublico"
+    return {"texto": texto, "corpo_sem_link": corpo_sem_link, "link": f["link"], "variante_link": "resposta",
+            "erros": erros}

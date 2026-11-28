@@ -3,7 +3,7 @@
 Nota = tamanho relativo + indício + interesse do público.
 - Tamanho relativo: R$ por habitante do município (IBGE). Contrato de R$ 400 mil em cidade de
   8 mil habitantes pesa mais que em BH.
-- Indício: sinais que se somam (sem licitação, verba fora do estado do parlamentar, gasto alto na cota...).
+- Indício: sinais que se somam (sem licitação, prefeitura que recebeu emenda Pix, cidade sem esgoto...).
 - Interesse: peso por categoria. Começa igual para todas; depois é ajustado pelo engajamento (Buffer).
 Depois da nota, valem os limites por categoria e o teto do dia.
 """
@@ -14,10 +14,9 @@ from pathlib import Path
 
 import requests
 
-# emenda do dia, cota e raio-X desligados (fracos); ranking 1/dia
-LIMITE_DIA = {"show": 4, "midia": 3, "inusitada": 3, "ranking": 1, "emenda": 0, "cota": 0, "raiox": 0}
+LIMITE_DIA = {"show": 4, "midia": 3, "inusitada": 3, "ranking": 1}
 TETO_DIA = 10
-INTERESSE = {"show": 1, "midia": 1, "inusitada": 1, "ranking": 99, "emenda": 1, "cota": 1, "raiox": 99}
+INTERESSE = {"show": 1, "midia": 1, "inusitada": 1, "ranking": 99}
 
 IBGE_MUN = "https://servicodados.ibge.gov.br/api/v1/localidades/municipios"
 IBGE_POP = ("https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/-1/variaveis/9324"
@@ -87,14 +86,8 @@ def nota(f, pop):
         por_hab = f["valor"] / hab
         f["por_habitante"] = por_hab
         pontos += 3 if por_hab >= 10 else 2 if por_hab >= 2 else 1 if por_hab >= 0.5 else 0
-    elif cat == "cota":
-        pontos += 2 if f["valor"] >= 20_000 else 1 if f["valor"] >= 5_000 else 0
     # indícios
     if _SEM_LICITACAO.search(f.get("objeto", "")):
-        pontos += 1
-    if f.get("tipo") == "emenda_fora":
-        pontos += 3
-    if f.get("tipo") in ("cota_fds", "cota_refeicao", "cota_fornecedor"):
         pontos += 1
     if f.get("qtd_contratos", 1) > 1:
         pontos += 1
@@ -109,7 +102,6 @@ def nota(f, pop):
         pontos += 3
         if f.get("sem_esgoto", 0) >= 50:
             pontos += 2
-    pontos += f.get("mencoes", 0)  # raio-X: mais citado no noticiário vem primeiro
     f["nota"] = pontos
     return pontos
 

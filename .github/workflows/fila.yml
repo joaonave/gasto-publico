@@ -1,10 +1,11 @@
-name: Fila do Buffer (diagnóstico)
+name: Fila do Buffer (listar, métricas, remover)
+# Dispara ao alterar dados/apagar.txt:
+#   "metricas <qualquer coisa>"  → lista a fila e as métricas dos posts enviados
+#   "apagar:<trecho de 10+ letras>" → remove da fila o post agendado que contém o trecho
 on:
   push:
     paths: ["dados/apagar.txt"]
   workflow_dispatch:
-    inputs:
-      apagar: {description: 'trecho do texto a remover da fila', required: false, default: ''}
 permissions:
   contents: write
 jobs:
@@ -12,55 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: {ref: main}
       - uses: actions/setup-python@v5
         with: {python-version: "3.12"}
       - run: pip install requests
       - env: {BUFFER_KEY: "${{ secrets.BUFFER_KEY }}"}
         run: |
           mkdir -p dados/diag
-          T="${{ inputs.apagar }}"; [ -z "$T" ] && [ -f dados/apagar.txt ] && T="$(cat dados/apagar.txt)"; case "$T" in apagar:??????????*) python -m robo.fila --apagar "${T#apagar:}" > dados/diag/fila.txt 2>&1 || true;; esac
+          T="$(cat dados/apagar.txt 2>/dev/null)"
+          case "$T" in apagar:??????????*) python -m robo.fila --apagar "${T#apagar:}" > dados/diag/fila.txt 2>&1 || true;; *) : > dados/diag/fila.txt;; esac
           python -m robo.fila --listar >> dados/diag/fila.txt 2>&1 || true
-          python - > dados/diag/itens.txt 2>&1 <<'PY' || true
-          import requests
-          from robo import config, itens
-          r = requests.get(config.PNCP_BASE, params={"dataInicial": "20261126", "dataFinal": "20261126", "pagina": 1, "tamanhoPagina": 10}, timeout=60)
-          d = r.json()["data"]
-          print("chaves:", sorted(d[0].keys()))
-          for c in d[:4]:
-              ctl = c.get("numeroControlePncpCompra")
-              its = itens.buscar(ctl)
-              print("==", ctl, "|", (c.get("objetoContrato") or "")[:70], "| itens:", None if its is None else len(its))
-              for i in (its or [])[:2]: print("   ", i.get("descricao", "")[:70], i.get("quantidade"), i.get("unidadeMedida"), i.get("valorUnitarioEstimado"))
-          its = itens.buscar("46523130000100-1-000246/2026"); print("itapecerica:", its and its[0].get("descricao"))
-          PY
-          python - > dados/diag/ranking.txt 2>&1 <<'PY' || true
-          from collections import defaultdict
-          from robo import emendas, emendas_portal
-          L = emendas_portal.baixar(); cad = emendas.parlamentares()
-          por, tipo = defaultdict(float), defaultdict(lambda: defaultdict(float))
-          for r in L:
-              if str(r["ano_mes"]).startswith("2026"):
-                  k = emendas.norm(r["autor"]); por[k] += r["pago"] or 0; tipo[k][r["tipo"]] += r["pago"] or 0
-          ok = {k: v for k, v in por.items() if k in cad}
-          print("parlamentares com pagamento 2026:", len(ok), "| total", round(sum(ok.values())/1e9, 2), "bi | fora do cadastro (bancada/comissão/relator/ex):", round(sum(v for k, v in por.items() if k not in cad)/1e9, 2), "bi")
-          print("== TOP 15")
-          for k, v in sorted(ok.items(), key=lambda kv: -kv[1])[:15]:
-              c = cad[k]; t = tipo[k]
-              print(f"{v/1e6:7.1f} mi | {c['cargo']} {c['nome']} ({c['partido']}-{c['uf']}) | pix {t.get('Emenda Individual - Transferências Especiais',0)/1e6:.1f} | finalidade {t.get('Emenda Individual - Transferências com Finalidade Definida',0)/1e6:.1f}")
-          print("== BOTTOM 5 (com pagamento)")
-          for k, v in sorted(ok.items(), key=lambda kv: kv[1])[:5]:
-              c = cad[k]; print(f"{v/1e6:7.2f} mi | {c['cargo']} {c['nome']} ({c['partido']}-{c['uf']})")
-          for campo in ("partido", "uf"):
-              g, n = defaultdict(float), defaultdict(int)
-              for k, v in ok.items(): g[cad[k][campo]] += v; n[cad[k][campo]] += 1
-              print(f"== POR {campo.upper()} (total | média por parlamentar | qtd)")
-              for x, v in sorted(g.items(), key=lambda kv: -kv[1] / n[kv[0]])[:30]:
-                  print(f"  {x:14s} {v/1e6:8.1f} mi | {v/n[x]/1e6:6.1f} mi/parl | {n[x]}")
-          PY
-          python -m robo.noticias > dados/diag/noticias.txt 2>&1 || true
           python -m robo.fila --metricas > dados/diag/metricas.json 2> dados/diag/metricas_erro.txt || true
-          python -c "from pathlib import Path; from robo import municipio as m; M=m.Municipios(Path('/tmp/x.json')); [print(c, M.dados(c), m.comentario({'municipio':n,'uf':u}, M.dados(c)), sep='\n') for c,n,u in (('2110302','Santo Antônio dos Lopes','MA'),('3106200','Belo Horizonte','MG'))]" > dados/diag/municipio.txt 2>&1 || true
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dados/diag && git commit -m "Diagnóstico da fila" && git pull --rebase -X theirs origin main && git push
+          git add dados/diag && git commit -m "Fila do Buffer" && git pull --rebase --autostash -X theirs origin main && git push

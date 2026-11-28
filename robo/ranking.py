@@ -107,7 +107,7 @@ def fato(variante, linhas, cadastro, ano=None):
         valor = sem_dono
     # lista encurta (4 → 3 → 2 nomes) até o post caber em 280 com folga
     def cabe(t):
-        return len(manchete) + len(t) + 40 <= 280
+        return len(manchete) + len(t) + 75 <= 280  # comentário + #GastoPublico
     if variante in ("deputados", "senadores", "pix"):
         linhas_ = corpo.split("\n")
         while len(linhas_) > 2 and not cabe("\n".join(linhas_)):

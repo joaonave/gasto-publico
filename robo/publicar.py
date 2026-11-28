@@ -35,17 +35,20 @@ def canal_x():
     raise RuntimeError("Nenhum canal do X conectado no Buffer")
 
 
-def horarios(qtd, agora=None):
+def horarios(qtd, agora=None, dia=None):
+    """Horários das 8h às 21h do dia de publicação (dia = 'AAAA-MM-DD'; padrão: hoje).
+    Rodada da noite agenda o dia seguinte; rodada tarde comprime o intervalo (mín. 30 min)."""
     agora = agora or datetime.now(BRT)
-    t = max(agora + timedelta(minutes=10), agora.replace(hour=INICIO_H, minute=0, second=0, microsecond=0))
-    fim = agora.replace(hour=FIM_H, minute=0, second=0, microsecond=0)
-    # comprime o intervalo (mín. 30 min) para caber tudo até as 21h quando a rodada começa tarde
+    base = datetime.strptime(dia, "%Y-%m-%d").replace(tzinfo=BRT) if dia else agora
+    inicio = base.replace(hour=INICIO_H, minute=0, second=0, microsecond=0)
+    fim = base.replace(hour=FIM_H, minute=0, second=0, microsecond=0)
+    t = max(agora + timedelta(minutes=10), inicio)
     intervalo = INTERVALO_MIN
     if qtd and t < fim:
         intervalo = max(30, min(INTERVALO_MIN, int((fim - t).total_seconds() // 60 // qtd)))
     slots = []
     while len(slots) < qtd:
-        if t > fim:  # passou das 21h: começa no dia seguinte
+        if t > fim:  # passou das 21h: continua no dia seguinte
             t = (t + timedelta(days=1)).replace(hour=INICIO_H, minute=0)
             fim = fim + timedelta(days=1)
         slots.append(t)
@@ -95,7 +98,7 @@ def _caber(dados, sufixo=""):
     return "" if not linhas or so_cabecalho else "\n".join(linhas)
 
 
-def agendar(posts):
+def agendar(posts, dia=None):
     """posts: lista de dicts com texto, corpo_sem_link, link, variante_link e card (caminho no repositório).
     Tenta com imagem e com link na resposta; se o Buffer recusar, simplifica até publicar."""
     if not os.environ.get("BUFFER_KEY"):
@@ -104,7 +107,7 @@ def agendar(posts):
     canal = canal_x()
     print(f"  Buffer: canal {canal['name']} ({canal['service']})")
     saida = []
-    for post, quando in zip(posts, horarios(len(posts))):
+    for post, quando in zip(posts, horarios(len(posts), dia=dia)):
         due = quando.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
         tentativas = []
         dados = post.get("dados_municipio") or ""

@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths: ["robo/**", "requirements.txt", ".github/workflows/**"]   # código novo roda sozinho
   schedule:
-    # o agendamento do GitHub atrasa ou falha: várias tentativas; só a primeira do dia roda (ultima_rodada)
-    - cron: "7 10 * * *"   # 07:07
-    - cron: "37 10 * * *"  # 07:37
-    - cron: "17 11 * * *"  # 08:17
-    - cron: "7 12 * * *"   # 09:07
+    # A fila do dia seguinte é preparada na véspera (a partir das 21h). O agendamento do GitHub atrasa ou
+    # falha, então há várias tentativas; só a primeira de cada dia de publicação roda (estado: ultima_rodada).
+    - cron: "37 0 * * *"   # 21:37 (véspera)
+    - cron: "7 2 * * *"    # 23:07 (véspera)
+    - cron: "17 4 * * *"   # 01:17 (véspera)
+    - cron: "7 10 * * *"   # 07:07 (se a véspera falhou)
+    - cron: "37 11 * * *"  # 08:37
     - cron: "7 14 * * *"   # 11:07
   workflow_dispatch:
     inputs:
@@ -81,17 +83,18 @@ jobs:
           python - <<'PY'
           import json, os, subprocess
           from datetime import datetime, timedelta, timezone
+          from robo.main import dia_de_publicacao
           agora = datetime.now(timezone(timedelta(hours=-3)))
-          hoje = agora.strftime("%Y-%m-%d")
-          if os.environ.get("GITHUB_EVENT_NAME") == "push" and agora.hour < 10:
-              raise SystemExit(0)  # push de madrugada: a rodada do dia ainda vai acontecer
+          hoje = dia_de_publicacao(agora)
+          if os.environ.get("GITHUB_EVENT_NAME") == "push" and 3 <= agora.hour < 10:
+              raise SystemExit(0)  # push de manhã cedo: a rodada do dia ainda vai acontecer
           e = json.load(open("dados/estado.json"))
           qtd = e.get("pub_qtd", 0) if e.get("pub_dia") == hoje else 0
           print("posts hoje:", qtd)
           if qtd == 0:
               url = f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
               subprocess.run(["gh", "issue", "create", "--title", f"Dia sem posts – {hoje}", "--body",
-                              f"@joaonave a rodada terminou sem nenhum post agendado hoje. Relatório em saida/. Execução: {url}"])
+                              f"@joaonave a rodada terminou sem nenhum post agendado para {hoje}. Relatório em saida/. Execução: {url}"])
           PY
       - name: Avisar falha
         if: failure()

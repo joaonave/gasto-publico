@@ -1,22 +1,16 @@
 """Emendas parlamentares pelo arquivo oficial de download do Portal da Transparência (sem chave).
 
-Arquivo único com todas as emendas desde 2014: autor, localidade do gasto (município/UF),
-valores empenhado, liquidado e pago. O robô compara o "valor pago" de hoje com o de ontem:
-a diferença é o que foi pago no dia.
+Arquivo "por favorecido": autor, tipo de emenda (ex.: transferência especial = "emenda Pix"), favorecido,
+natureza jurídica, município/UF e valor recebido, por mês. Usado no ranking e no cruzamento Pix × prefeitura.
 """
 import csv
 import io
-import json
-import re
 import unicodedata
 import zipfile
-from pathlib import Path
 
 import requests
 
 URL = "https://portaldatransparencia.gov.br/download-de-dados/emendas-parlamentares/UNICO"
-MAX_POSTS = 3
-PAGO_MIN = 300_000  # R$ pagos no dia para virar post
 
 
 def _n(txt):
@@ -85,48 +79,3 @@ def baixar():
             linhas.append(reg)
     print(f"  emendas no arquivo: {len(linhas)}")
     return linhas
-
-
-def _chave(r):
-    # uma emenda pode ter várias linhas (uma por localidade/função): a chave junta tudo
-    return "|".join([r["codigo"], r.get("cod_favorecido", ""), r.get("ano_mes", ""), r["funcao"]])
-
-
-def pagamentos_do_dia(linhas, arq_estado: Path, ano):
-    """Compara o valor pago acumulado com o da última execução. Retorna (pagamentos, primeira_vez)."""
-    atuais = {}
-    for r in linhas:
-        if str(r["ano"]) == str(ano):
-            k = _chave(r)
-            if k in atuais:
-                atuais[k] = dict(atuais[k], pago=atuais[k]["pago"] + r["pago"])
-            else:
-                atuais[k] = r
-    anteriores = json.loads(arq_estado.read_text(encoding="utf-8")) if arq_estado.exists() else None
-    arq_estado.parent.mkdir(parents=True, exist_ok=True)
-    arq_estado.write_text(json.dumps({k: r["pago"] for k, r in atuais.items()}), encoding="utf-8")
-    if anteriores is None:
-        return [], True
-    pagos = []
-    for k, r in atuais.items():
-        delta = r["pago"] - anteriores.get(k, 0.0)
-        if delta >= PAGO_MIN:
-            pagos.append(dict(r, pago_dia=delta))
-    return pagos, False
-
-
-# bancos federais aparecem como favorecido quando só intermediam o repasse (sede em Brasília):
-# o destino real não está no arquivo, então não contam como destino nem como "fora do estado"
-_INTERMEDIARIOS = re.compile(r"^(BANCO DO BRASIL|CAIXA ECONOMICA FEDERAL)", re.IGNORECASE)
-
-
-def intermediario(r):
-    return bool(_INTERMEDIARIOS.match((r.get("favorecido") or "").strip()))
-
-
-def para_planos(linhas):
-    """Formato usado pelo raio-X (soma do valor pago por emenda/destino)."""
-    return [{"id": _chave(r), "ano": r["ano"], "parlamentar": _n(r["autor"]), "emenda": r["codigo"],
-             "beneficiario": "" if intermediario(r) else (r["municipio"] or r["localidade"]),
-             "uf_destino": "" if intermediario(r) else r["uf"],
-             "situacao": "", "valor": r["pago"]} for r in linhas]

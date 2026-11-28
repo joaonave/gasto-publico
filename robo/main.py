@@ -1,27 +1,34 @@
-"""Execução diária: coleta → candidatos → sistema de pontos → redação → checagem → Buffer."""
+"""Rodada do robô: coleta → candidatos → pontos → conferência (QA + itens do contrato) → redação → Buffer.
+
+Dia de publicação: rodada a partir das 21h agenda o dia seguinte (a fila de amanhã fica pronta na véspera);
+antes disso, agenda o próprio dia. Várias tentativas de agendamento por dia; só a primeira de cada dia publica.
+"""
 import json
-import re
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from . import card, cota, homicidios, itens, municipio, noticias, pix, qa, ranking, emendas, emendas_portal, outros_pncp, pncp, pontos, posts_emendas, publicar, redacao, shows
+from . import (card, emendas, emendas_portal, homicidios, itens, municipio, outros_pncp, pix, pncp, pontos,
+               publicar, qa, ranking, redacao, shows)
 
 RAIZ = Path(__file__).resolve().parent.parent
 ESTADO = RAIZ / "dados" / "estado.json"
 SAIDA = RAIZ / "saida"
 BRT = timezone(timedelta(hours=-3))
+VIRADA_H = 21  # a partir desta hora a rodada prepara o dia seguinte
+DIAS_ATRAS = 7  # poucos candidatos: busca contratos de até N dias antes
 
 
 def _carregar_estado():
     if ESTADO.exists():
         return json.loads(ESTADO.read_text(encoding="utf-8"))
-    return {"vistos": [], "contador_posts": 0}
+    return {"vistos": []}
 
 
 def _salvar_estado(e):
     ESTADO.parent.mkdir(parents=True, exist_ok=True)
     e["vistos"] = e["vistos"][-20000:]
+    e["shows_vistos"] = e.get("shows_vistos", [])[-5000:]
     ESTADO.write_text(json.dumps(e, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
@@ -33,161 +40,187 @@ def _normalizar_data(txt):
     return d if int(d[:4]) > 1900 else d[4:] + d[2:4] + d[:2]
 
 
-def _candidatos_pncp(data, estado, log):
-    contratos = pncp.contratos_do_dia(data)
-    todos_shows = shows.selecionar(contratos)
-    com_artista = [f for f in todos_shows if f.get("artista")]  # show sem nome não engaja: fica fora
-    c = [f for f in com_artista + outros_pncp.selecionar(contratos) if f["id"] not in estado["vistos"]]
-    log.append(f"PNCP {data}: {len(contratos)} contratos | shows {len(todos_shows)} ({len(todos_shows) - len(com_artista)} sem artista, descartados) | candidatos: {len(c)}")
-    return c
+def dia_de_publicacao(agora=None):
+    agora = agora or datetime.now(BRT)
+    return (agora + timedelta(days=1) if agora.hour >= VIRADA_H else agora).strftime("%Y-%m-%d")
 
 
 def _chave_show(f):
     return f"{f.get('orgao', '')}|{(f.get('artista') or '').upper()}|{round(f.get('valor') or 0, -3):.0f}"
 
 
-_CTX = {}  # emendas baixadas na rodada (usadas também no cruzamento Pix × prefeitura)
+# ---------- candidatos ----------
+
+def _candidatos_pncp(data, estado, log):
+    contratos = pncp.contratos_do_dia(data)
+    todos_shows = shows.selecionar(contratos)
+    com_artista = [f for f in todos_shows if f.get("artista")]  # show sem nome não engaja: fica fora
+    c = [f for f in com_artista + outros_pncp.selecionar(contratos) if f["id"] not in estado["vistos"]]
+    log.append(f"PNCP {data}: {len(contratos)} contratos | shows {len(todos_shows)} "
+               f"({len(todos_shows) - len(com_artista)} sem artista, descartados) | candidatos: {len(c)}")
+    return c
 
 
-def _candidatos_emendas(estado, log):
+def _emendas(estado, dia, log):
+    """Baixa emendas e cadastro (usados no ranking e no cruzamento Pix). Devolve (linhas, cadastro, ranking)."""
     cadastro = emendas.parlamentares()
-    todas = emendas_portal.baixar()
-    _CTX.update(linhas=todas, cadastro=cadastro)
-    ano = datetime.now(BRT).year
-    pagos, primeira = emendas_portal.pagamentos_do_dia(todas, RAIZ / "dados" / "emendas_recebido.json", ano)
-    c = []
-    if primeira:
-        log.append("Emendas: primeira execução, base criada. Pagamentos do dia a partir da próxima.")
-    else:
-        c = [f for f in (posts_emendas.fatos_pagamento(r, cadastro) for r in pagos) if f]
-        log.append(f"Emendas: {len(pagos)} pagamentos acima do corte | {len(c)} com deputado/senador identificado")
-    # Raio-X: primeiro quem está no noticiário (mais citado nas últimas 24h); sem notícia, rodízio
-    hoje = datetime.now(BRT)
-    if pontos.LIMITE_DIA.get("raiox", 0) and estado.get("raiox_dia") != hoje.strftime("%Y-%m-%d"):
-        planos = emendas_portal.para_planos(todas)
-        feitos = {k for k, d in estado.get("raiox_feitos", {}).items()
-                  if (hoje - datetime.fromisoformat(d).replace(tzinfo=BRT)).days < 14}
-        try:
-            citados = noticias.parlamentares_citados(noticias.manchetes(), cadastro)
-        except Exception as e:  # noqa: BLE001
-            citados = {}
-            log.append(f"Notícias indisponíveis: {e}")
-        mais_citados = sorted(citados.items(), key=lambda kv: -len(kv[1]))
-        log.append("Parlamentares no noticiário: " + ", ".join(f"{cadastro[k]['nome']} ({len(v)})" for k, v in mais_citados[:8]))
-        for chave, lst in mais_citados:
-            if len(c) and sum(1 for f in c if f.get("tipo") == "raiox") >= pontos.LIMITE_DIA["raiox"]:
-                break
-            if chave in feitos:
-                continue
-            rx = emendas.raio_x(chave, planos, cadastro)
-            if rx:
-                f = posts_emendas.post_raio_x(rx)
-                f["chave"], f["noticia"], f["mencoes"] = chave, lst[0]["titulo"], len(lst)
-                c.append(f)
-        if not any(f.get("tipo") == "raiox" for f in c):
-            for _ in range(50):
-                chave = emendas.proximo_raio_x(estado, cadastro)
-                rx = emendas.raio_x(chave, planos, cadastro)
-                if rx:
-                    f = posts_emendas.post_raio_x(rx)
-                    f["chave"] = chave
-                    c.append(f)
-                    break
-    # ranking do dia (rodízio: deputados, senadores, partido, Pix, UF, sem dono)
-    if estado.get("ranking_dia") != hoje.strftime("%Y-%m-%d"):
-        f = ranking.do_dia(estado, todas, cadastro)
-        if f:
-            c.append(f)
-    return c
+    linhas = emendas_portal.baixar()
+    f = ranking.do_dia(estado, linhas, cadastro) if estado.get("ranking_dia") != dia else None
+    log.append(f"Emendas: {len(linhas)} linhas | ranking do dia: {f['variante'] if f else 'não'}")
+    return linhas, cadastro, ([f] if f else [])
 
 
-def _candidatos_cota(estado, log):
-    ano = datetime.now(BRT).year
-    notas = cota.baixar(ano)
-    vistos = set(estado.get("cota_ids", []))
-    c = []
-    if not vistos:
-        log.append("Cota: primeira execução, base criada.")
-    else:
-        c, _ = cota.gatilhos(notas, vistos)
-        log.append(f"Cota parlamentar: {len(c)} gatilhos")
-    estado["cota_ids"] = ["cota-" + str(n["id"]) for n in cota.recentes(notas)]
-    return c
-
+# ---------- rodada ----------
 
 def executar(data=None):
     data = (_normalizar_data(data or os.environ.get("DATA"))
             or (datetime.now(BRT) - timedelta(days=1)).strftime("%Y%m%d"))
     ligar = os.environ.get("PUBLICAR", "false").lower() == "true"
-    hoje = datetime.now(BRT).strftime("%Y-%m-%d")
-    print(f"Data: {data} | publicar: {ligar}")
-    estado = _carregar_estado()
     simular = os.environ.get("SIMULAR") == "1"
+    estado = _carregar_estado()
+    dia = dia_de_publicacao()
     if simular:  # teste integrado: dia "novo", nada é gravado nem publicado
-        estado.update(pub_dia=None, pub_qtd=0, pub_cat={}, ranking_dia=None, raiox_dia=None, manchetes_dia={})
+        estado.update(pub_dia=None, pub_qtd=0, pub_cat={}, ranking_dia=None, manchetes_dia={})
         ligar = False
-    # disparos automáticos (cron do GitHub ou externo) rodam uma vez por dia; push e data manual sempre rodam
-    if (not simular and os.environ.get("GITHUB_EVENT_NAME") in ("schedule", "workflow_dispatch") and not os.environ.get("DATA")
-            and estado.get("ultima_rodada") == hoje):
-        print("Rodada de hoje já feita; agendamento extra ignorado.")
+    automatico = os.environ.get("GITHUB_EVENT_NAME") in ("schedule", "workflow_dispatch") and not os.environ.get("DATA")
+    if automatico and not simular and estado.get("ultima_rodada") == dia:
+        print(f"Fila de {dia} já preparada; tentativa extra ignorada.")
         return
-    log = [f"# Robô – dados de {data[6:]}/{data[4:6]}/{data[:4]} – execução {datetime.now(BRT):%d/%m %H:%M}", ""]
+    print(f"Dados: {data} | dia de publicação: {dia} | publicar: {ligar}")
+    log = [f"# Robô – dados de {data[6:]}/{data[4:6]}/{data[:4]} – publicação em {dia} – "
+           f"execução {datetime.now(BRT):%d/%m %H:%M}", ""]
 
-    candidatos = []
-    for nome, fn in [("PNCP", lambda: _candidatos_pncp(data, estado, log)),
-                     ("Emendas", lambda: _candidatos_emendas(estado, log)),
-                     ]:  # cota desligada: post fraco
-        try:
-            candidatos += fn()
-        except Exception as e:  # noqa: BLE001
-            log.append(f"Erro em {nome}: {e}")
-            print(f"Erro {nome}: {e}")
+    candidatos, linhas, cadastro = [], [], {}
+    try:
+        candidatos += _candidatos_pncp(data, estado, log)
+    except Exception as e:  # noqa: BLE001
+        log.append(f"Erro no PNCP: {e}")
+    try:
+        linhas, cadastro, rk = _emendas(estado, dia, log)
+        candidatos += rk
+    except Exception as e:  # noqa: BLE001
+        log.append(f"Erro nas emendas (sem ranking e sem Pix hoje): {e}")
 
-    # poucos candidatos: busca contratos dos dias anteriores ainda não publicados (até 7 dias)
-    vagas = pontos.TETO_DIA - (estado.get("pub_qtd", 0) if estado.get("pub_dia") == hoje else 0)
-    alvo = 3 * vagas if vagas >= 3 else 0  # teto quase cheio: não gasta 30 min buscando contratos antigos
+    # poucos candidatos: contratos dos dias anteriores ainda não publicados
+    vagas = pontos.TETO_DIA - (estado.get("pub_qtd", 0) if estado.get("pub_dia") == dia else 0)
+    alvo = 3 * vagas if vagas >= 3 else 0
     base = datetime.strptime(data, "%Y%m%d")
-    for k in range(1, 8):
+    for k in range(1, DIAS_ATRAS + 1):
         if len(candidatos) >= alvo:
             break
-        dia = (base - timedelta(days=k)).strftime("%Y%m%d")
+        d = (base - timedelta(days=k)).strftime("%Y%m%d")
         ids = {f["id"] for f in candidatos}
         try:
-            candidatos += [f for f in _candidatos_pncp(dia, estado, log) if f["id"] not in ids]
+            candidatos += [f for f in _candidatos_pncp(d, estado, log) if f["id"] not in ids]
         except Exception as e:  # noqa: BLE001
-            log.append(f"Erro em PNCP {dia}: {e}")
+            log.append(f"Erro no PNCP {d}: {e}")
 
     pop = pontos.Populacao(RAIZ / "dados" / "populacao.json")
     muni = municipio.Municipios(RAIZ / "dados" / "municipios.json")
     hom = homicidios.Homicidios(pop.por_cod)
 
-    # narrativa: prefeitura que recebeu "emenda Pix" e contratou show/publicidade/compra inusitada, em cidade sem esgoto
-    if _CTX.get("linhas"):
-        idx = pix.indice(_CTX["linhas"])
+    # emenda Pix recebida pela prefeitura que contratou o gasto (+ esgoto da cidade)
+    if linhas:
+        idx = pix.indice(linhas)
         com_pix = 0
         for f in candidatos:
             if pontos.categoria(f) in ("show", "midia", "inusitada"):
-                pix.anexar(f, idx, _CTX["cadastro"])
+                pix.anexar(f, idx, cadastro)
                 if f.get("pix"):
                     com_pix += 1
                     d = muni.dados(pop.cod(f))
                     if "esgoto" in d:
                         f["sem_esgoto"] = round(100 - d["esgoto"], 1)
         log.append(f"Emenda Pix: {len(idx)} cidades com Pix em 12 meses | {com_pix} contratos de prefeitura que recebeu Pix")
-    # escolhe, revisa (QA + itens do contrato) e, se algum cair, escolhe de novo para não perder a vaga
-    aprovados, segurados, manchetes = [], [], set(estado.get("manchetes_dia", {}).get(hoje, []))
-    restantes, escolhidos = list(candidatos), []
+
+    escolhidos, segurados = _escolher_e_conferir(candidatos, estado, dia, pop)
+    log += ["", f"Candidatos: {len(candidatos)} | escolhidos e conferidos: {len(escolhidos)} | "
+                f"segurados: {len(segurados)} (já agendados para {dia}: {estado.get('pub_qtd', 0)})", ""]
+    if segurados:
+        log += ["## Segurados (não publicados)"] + [
+            f"- {f.get('manchete_padrao') or f.get('orgao')} → {'; '.join(m)}" for f, m in segurados] + [""]
+
+    aprovados = []
+    for f in escolhidos:
+        post = redacao.montar(f, True)
+        # dados da cidade só quando o órgão é municipal; o item confirmado do contrato vem primeiro
+        cod = pop.cod(f) if redacao.eh_municipal(f.get("orgao")) else ""
+        cidade = municipio.comentario(f, muni.dados(cod), pop.por_cod.get(cod), hom.de(cod),
+                                      getattr(hom, "anos", "")) if cod else ""
+        post["dados_municipio"] = "\n".join(x for x in (itens.linha(f.get("item_confirmado")), cidade) if x)
+        post["erros"] += qa.conferencia_final(f, post)  # último portão antes do Buffer
+        status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
+        hab = f" | R$/hab {f['por_habitante']:.2f}" if f.get("por_habitante") else ""
+        log += [f"## {status} | {f.get('tipo')} | nota {f['nota']}{hab}",
+                "```", post["corpo_sem_link"] + (f"\n--- 1º comentário ---\n{post['dados_municipio']}"
+                                                  if post["dados_municipio"] else ""),
+                "```", f"Link: {post['link']}", f"Objeto: {f.get('objeto', '')[:300]}", ""]
+        if post["erros"]:
+            segurados.append((f, post["erros"]))
+            continue
+        nome_card = f"cards/{dia}/{abs(hash(f['id'])) % 10**10}.png"
+        try:
+            card.gerar(f, RAIZ / nome_card)
+        except Exception as e:  # noqa: BLE001
+            print(f"  card falhou: {e}")
+            nome_card = ""
+        post.update(card=nome_card, id=f["id"], ids_extras=f.get("ids_extras", []), categoria=pontos.categoria(f),
+                    chave_show=_chave_show(f) if f.get("tipo") == "show" else "")
+        aprovados.append((f, post))
+    muni.salvar()
+
+    resto = [f for f in candidatos if f not in escolhidos]
+    if resto:
+        log += ["", "### Não escolhidos (continuam valendo nos próximos dias)"] + [
+            f"- {f.get('nota', '?')} | {f.get('tipo')} | {f.get('manchete_padrao') or f.get('orgao', '')}"[:160]
+            for f in sorted(resto, key=lambda f: -f.get("nota", 0))[:30]]
+
+    if simular:
+        _relatorio_simulacao(data, dia, aprovados, segurados, log)
+        return
+
+    if ligar and aprovados:
+        (RAIZ / "dados" / "pendentes.json").write_text(json.dumps(
+            {"saida": f"saida/{data}.md", "dia": dia, "posts": [p for _, p in aprovados]},
+            ensure_ascii=False), encoding="utf-8")
+        pontos.registrar(estado, [f for f, _ in aprovados])
+        log += ["", f"{len(aprovados)} posts prontos para o Buffer (resultado abaixo)."]
+        for f, _ in aprovados:
+            estado["vistos"] += [f["id"]] + f.get("ids_extras", [])
+            if f.get("tipo") == "show":
+                estado.setdefault("shows_vistos", []).append(_chave_show(f))
+            if f.get("tipo") == "ranking":
+                estado["ranking_dia"], estado["ranking_pos"] = dia, f["ranking_pos_prox"]
+    # segurados não voltam; não escolhidos continuam valendo (até 90 dias da assinatura)
+    for f, _ in segurados:
+        estado["vistos"] += [f["id"]] + f.get("ids_extras", [])
+
+    estado["ultima_rodada"] = dia
+    SAIDA.mkdir(exist_ok=True)
+    arq = SAIDA / f"{data}.md"
+    arq.write_text("\n".join(log), encoding="utf-8")
+    _salvar_estado(estado)
+    print(f"Gravado: {arq.relative_to(RAIZ)}")
+
+
+def _escolher_e_conferir(candidatos, estado, dia, pop):
+    """Escolhe pela nota; confere cada escolhido (QA + itens do contrato no PNCP); se algum cair,
+    escolhe de novo para não perder a vaga."""
+    segurados, escolhidos = [], []
+    manchetes = set(estado.get("manchetes_dia", {}).get(dia, []))
+    shows_vistos = set(estado.get("shows_vistos", []))
+    restantes = list(candidatos)
     for _ in range(6):
-        novos = [f for f in pontos.escolher(restantes, estado, hoje, pop) if f not in escolhidos]
+        novos = [f for f in pontos.escolher(restantes, estado, dia, pop) if f not in escolhidos]
         if not novos:
             break
         caiu = False
         for f in novos:
-            if not f.get("manchete_padrao") and f.get("tipo") == "show":
+            if f.get("tipo") == "show" and not f.get("manchete_padrao"):
                 f["manchete_padrao"] = redacao._manchete_padrao(f)  # deduplicação e card usam a manchete
             motivos = qa.revisar(f, manchetes)
-            if f.get("tipo") == "show" and _chave_show(f) in set(estado.get("shows_vistos", [])):
-                motivos = (motivos or []) + ["mesmo show (órgão, artista, valor) já publicado"]
+            if f.get("tipo") == "show" and _chave_show(f) in shows_vistos:
+                motivos.append("mesmo show (órgão, artista, valor) já publicado")
             if not motivos:
                 ok, motivo, item = itens.verificar(f)
                 if ok:
@@ -203,86 +236,13 @@ def executar(data=None):
             escolhidos.append(f)
         if not caiu:
             break
-    estado["manchetes_dia"] = {hoje: sorted(manchetes)}
-    log += ["", f"Candidatos: {len(candidatos)} | escolhidos e conferidos: {len(escolhidos)} | segurados: {len(segurados)} "
-                f"(já publicados hoje: {estado.get('pub_qtd', 0)})", ""]
-    if segurados:
-        log += ["## Segurados pelo QA (não publicados)"] + [
-            f"- {f.get('manchete_padrao') or f.get('orgao')} → {'; '.join(m)}" for f, m in segurados] + [""]
-    for f in escolhidos:
-        post = redacao.montar(f, True)
-        # dados da cidade só quando o post é sobre a cidade: órgão municipal (PNCP) ou destino de emenda
-        local = str(f.get("tipo", "")).startswith("emenda") or re.search(r"munic|prefeit", f.get("orgao") or "", re.IGNORECASE)
-        cod = pop.cod(f) if local else ""
-        cidade = municipio.comentario(
-            f, muni.dados(cod), pop.por_cod.get(cod), hom.de(cod), getattr(hom, "anos", "")) if cod else ""
-        # item confirmado do contrato vem primeiro no 1º comentário (o que foi comprado, quanto, a que preço)
-        post["dados_municipio"] = "\n".join(x for x in (itens.linha(f.get("item_confirmado")), cidade) if x)
-        status = "OK" if not post["erros"] else "BLOQUEADO: " + "; ".join(post["erros"])
-        hab = f" | R$/hab {f['por_habitante']:.2f}" if f.get("por_habitante") else ""
-        log += [f"## {status} | {f.get('tipo')} | nota {f['nota']}{hab} | tags {post['variante_tag']}",
-                "```", post["texto"] + (f"\n--- 1º comentário ---\n{post['dados_municipio']}" if post["dados_municipio"] else ""),
-                "```", f"Objeto: {f.get('objeto', '')[:300]}", ""]
-        ia = qa.revisar_ia(f, post["texto"]) if not post["erros"] else []
-        if ia:
-            log.append(f"Segurado pela IA: {'; '.join(ia)}")
-            continue
-        if not post["erros"]:
-            nome_card = f"cards/{hoje}/{abs(hash(f['id'])) % 10**10}.png"
-            try:
-                card.gerar(f, RAIZ / nome_card)
-            except Exception as e:  # noqa: BLE001
-                print(f"  card falhou: {e}")
-                nome_card = ""
-            aprovados.append((f, dict(post, card=nome_card)))
-
-    muni.salvar()
-
-    # o que não foi escolhido fica registrado, com a nota
-    resto = [f for f in candidatos if f not in escolhidos]
-    if resto:
-        log += ["", "### Não escolhidos (nota)"] + [
-            f"- {f.get('nota', '?')} | {f.get('tipo')} | {f.get('manchete_padrao') or f.get('orgao', '')}"[:160]
-            for f in sorted(resto, key=lambda f: -f.get("nota", 0))[:30]]
-
-    if ligar and aprovados:
-        # publicação acontece no passo seguinte do workflow, depois que os cards estiverem no GitHub
-        (RAIZ / "dados").mkdir(exist_ok=True)
-        (RAIZ / "dados" / "pendentes.json").write_text(json.dumps(
-            {"saida": f"saida/{data}.md", "posts": [p for _, p in aprovados]}, ensure_ascii=False), encoding="utf-8")
-        publicados = [f for f, _ in aprovados]
-        pontos.registrar(estado, publicados)
-        log += ["", f"{len(aprovados)} posts prontos para o Buffer (resultado abaixo)."]
-        for f in publicados:
-            if f.get("tipo") == "show":
-                estado.setdefault("shows_vistos", []).append(_chave_show(f))
-            estado["vistos"].append(f["id"])
-            estado["vistos"].extend(f.get("ids_extras", []))
-            if f.get("tipo") == "ranking":
-                estado["ranking_dia"], estado["ranking_pos"] = hoje, f["ranking_pos_prox"]
-            if f.get("tipo") == "raiox":
-                estado["raiox_dia"] = hoje
-                estado.setdefault("raiox_feitos", {})[f.get("chave", f["id"])] = hoje
-
-    # segurados (QA/itens) não voltam; os não escolhidos continuam valendo nos próximos dias (até 90 dias)
-    for f, _ in segurados:
-        estado["vistos"].append(f["id"])
-        estado["vistos"].extend(f.get("ids_extras", []))
-
-    if simular:
-        _relatorio_simulacao(data, aprovados, segurados, log)
-        return
-    estado["ultima_rodada"] = hoje
-    SAIDA.mkdir(exist_ok=True)
-    arq = SAIDA / f"{data}.md"
-    arq.write_text("\n".join(log), encoding="utf-8")
-    _salvar_estado(estado)
-    print(f"Gravado: {arq.relative_to(RAIZ)}")
+    estado["manchetes_dia"] = {dia: sorted(manchetes)}
+    return escolhidos, segurados
 
 
-def _relatorio_simulacao(data, aprovados, segurados, log):
+def _relatorio_simulacao(data, dia, aprovados, segurados, log):
     """Teste integrado: mostra exatamente o que iria ao X (post + 1º comentário) e confere cada um."""
-    out = [f"# Teste integrado – dados de {data} – {datetime.now(BRT):%d/%m %H:%M}", ""]
+    out = [f"# Teste integrado – dados de {data} – publicação em {dia} – {datetime.now(BRT):%d/%m %H:%M}", ""]
     try:
         canal = publicar.canal_x()
         out.append(f"Buffer: conectado, canal X = {canal.get('name') or canal.get('id')}")
@@ -293,23 +253,14 @@ def _relatorio_simulacao(data, aprovados, segurados, log):
         fonte = f"Fonte oficial:\n{post['link']}"
         dados = publicar._caber(post.get("dados_municipio") or "", "\n\n" + fonte)
         resposta = (dados + "\n\n" if dados else "") + fonte
-        checks = {
-            "post ≤ 280": publicar._tam_x(post["corpo_sem_link"]) <= 280,
-            "1º comentário ≤ 280": publicar._tam_x(resposta) <= 280,
-            "sem link no post": "http" not in post["corpo_sem_link"],
-            "card gerado": bool(post.get("card")) and (RAIZ / post["card"]).exists(),
-            "sem erros de checagem": not post["erros"],
-            "sem PAGA na manchete": " PAGA " not in post["corpo_sem_link"].split("\n")[0],
-            "item conferido (contratos)": f.get("tipo") not in ("show", "midia", "inusitada")
-                                          or f.get("item_confirmado") is not None or f.get("tipo") != "inusitada",
-        }
+        checks = {"1º comentário ≤ 280": publicar._tam_x(resposta) <= 280,
+                  "card gerado": bool(post.get("card")) and (RAIZ / post["card"]).exists()}
         falhou = [k for k, v in checks.items() if not v]
         problemas += bool(falhou)
         out += [f"## {'OK' if not falhou else 'PROBLEMA: ' + ', '.join(falhou)} | {f.get('tipo')} | nota {f.get('nota')}",
                 "POST:", "```", post["corpo_sem_link"], "```", "1º COMENTÁRIO:", "```", resposta, "```",
                 f"Objeto: {(f.get('objeto') or '')[:250]}", ""]
     out.insert(2, f"**{len(aprovados)} posts prontos | {problemas} com problema | {len(segurados)} segurados**")
-    out += ["", "## Segurados"] + [f"- {f.get('manchete_padrao') or f.get('orgao')} → {'; '.join(m)}" for f, m in segurados]
     out += ["", "## Log da rodada", ""] + log
     arq = RAIZ / "dados" / "diag" / "teste_integrado.md"
     arq.parent.mkdir(parents=True, exist_ok=True)

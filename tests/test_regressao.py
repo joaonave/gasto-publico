@@ -7,9 +7,9 @@ from datetime import date, timedelta
 
 import pytest
 
-import robo.main  # noqa: F401  (import quebrado = rodada quebrada: ex. variável 'ranking' escondendo o módulo)
-from robo import (emendas, emendas_portal, fila, itens, municipio, outros_pncp, posts_emendas, publicar, ranking,
-                  redacao, shows)
+from datetime import datetime
+
+from robo import fila, itens, main, municipio, outros_pncp, publicar, qa, ranking, redacao, shows
 
 HOJE = date.today()
 
@@ -108,16 +108,6 @@ def test_show_cujo_item_e_so_palco_nao_sai():
     assert itens.verificar({"tipo": "show", "artista": "Fulano"}, palco)[0] is False
 
 
-# ---------- emendas ----------
-
-def test_banco_do_brasil_nao_e_destino_de_emenda():
-    linha = {"codigo": "1", "ano": "2024", "autor": "FULANO", "municipio": "", "localidade": "", "uf": "DF",
-             "pago": 1e6, "favorecido": "BANCO DO BRASIL SA", "cod_favorecido": "x", "ano_mes": "202401", "funcao": ""}
-    p = emendas_portal.para_planos([linha])[0]
-    assert p["uf_destino"] == "" and p["beneficiario"] == ""
-    assert posts_emendas.fatos_pagamento(dict(linha, delta=1e6), {"FULANO": {"uf": "RJ"}}) is None
-
-
 # ---------- texto ----------
 
 def _show():
@@ -132,20 +122,12 @@ def test_contrato_nao_e_pagamento():
     assert " PAGA " not in p["corpo_sem_link"] and "CONTRATA" in p["corpo_sem_link"]
 
 
-def test_link_vai_no_primeiro_comentario():
+def test_link_vai_no_primeiro_comentario_e_marca_nunca_some():
     p = redacao.montar(_show(), True)
     assert p["variante_link"] == "resposta" and "http" not in p["corpo_sem_link"]
-
-
-def test_raio_x_longo_cabe_em_280():
-    rx = {"nome": "Flávio Bolsonaro", "cargo": "Sen.", "partido": "REPUBLICANOS", "uf": "RJ", "total": 224.98e6,
-          "qtd": 50, "destinos": 10, "fora_do_estado": 44,
-          "top": [{"destino": "SAO JOAO DE MERITI", "uf": "RJ", "valor": 36.35e6}],
-          "por_ano": {"2020": 7.58e6, "2026": 51.67e6}}
-    f = posts_emendas.post_raio_x(rx)
-    f["nota"] = 99
-    p = redacao.montar(f, True)
-    assert redacao._tam(p["corpo_sem_link"]) <= 280
+    longo = dict(_show(), sem_esgoto=97, orgao="MUNICIPIO DE SAO JOAO DAS DUAS PONTES", municipio="São João das Duas Pontes",
+                 pix={"autor": "Dep. Fulano de Tal Sobrenome (REPUBLICANOS-SP)", "total": 1_398_000, "mes": "202606"})
+    assert "#GastoPublico" in redacao.montar(longo, True)["corpo_sem_link"]
 
 
 def test_rankings_cabem_em_280_e_nao_quebram():
@@ -320,3 +302,48 @@ def test_esgoto_nao_repete_no_comentario_quando_esta_no_post():
          "pix": {"total": 1}, "sem_esgoto": 96.6}
     t = municipio.comentario(f, {"idhm": 0.578, "agua": 32.6, "esgoto": 3.4, "precario": 82.9}, 4279)
     assert "🚽" not in t and "💩" in t
+
+
+# ---------- portão final e agendamento da véspera ----------
+
+def _show_real():
+    f = shows.fatos(contrato("Contratação da Banda Barões da Pisadinha, para apresentação musical", valor=400_000,
+                             fornecedor="BAROES DA PISADINHA PRODUCAO MUSICAL LTDA"))
+    f["orgao"] = "MUNICIPIO DE CIDADE X"
+    return f
+
+
+def test_portao_final_aprova_post_correto():
+    f = _show_real()
+    assert f["artista"] and qa.conferencia_final(f, redacao.montar(f)) == []
+
+
+def test_portao_final_barra_valor_link_artista_e_data_errados():
+    f = _show_real()
+    post = redacao.montar(f)
+    assert "link não corresponde ao contrato" in qa.conferencia_final(f, dict(post, link="https://pncp.gov.br/app/contratos/99999999000199/2026/7"))
+    assert "valor da manchete não confere com o contrato" in qa.conferencia_final(dict(f, valor=900_000), post)
+    assert "artista não aparece no contrato" in qa.conferencia_final(dict(f, artista="Wesley Safadão"), post)
+    assert any("data" in e for e in qa.conferencia_final(dict(f, data_assinatura="01/01/2024"), post))
+    assert "item da compra não confirmado no PNCP" in qa.conferencia_final(dict(f, tipo="inusitada"), post)
+
+
+def test_rodada_da_noite_prepara_o_dia_seguinte():
+    brt = main.BRT
+    assert main.dia_de_publicacao(datetime(2026, 11, 27, 21, 30, tzinfo=brt)) == "2026-11-28"
+    assert main.dia_de_publicacao(datetime(2026, 11, 28, 7, 7, tzinfo=brt)) == "2026-11-28"
+    slots = publicar.horarios(10, agora=datetime(2026, 11, 27, 21, 40, tzinfo=brt), dia="2026-11-28")
+    assert slots[0].strftime("%d %H:%M") == "28 08:00" and all(s.day == 28 and s.hour <= 21 for s in slots)
+
+
+def test_buffer_recusou_post_volta_a_concorrer(tmp_path, monkeypatch):
+    import json
+    from robo import publicar_pendentes as pp
+    est = tmp_path / "dados" / "estado.json"
+    est.parent.mkdir()
+    est.write_text(json.dumps({"vistos": ["a", "b"], "pub_qtd": 2, "pub_cat": {"show": 2}, "shows_vistos": ["k"]}))
+    monkeypatch.setattr(pp, "RAIZ", tmp_path)
+    pp._devolver_falhas([{"id": "a", "categoria": "show", "chave_show": "k"}, {"id": "b", "categoria": "show"}],
+                        [("t", "erro: limit"), ("t", "agendado 28/11 08:00")])
+    e = json.loads(est.read_text())
+    assert e["vistos"] == ["b"] and e["pub_qtd"] == 1 and e["pub_cat"]["show"] == 1 and e["shows_vistos"] == []
