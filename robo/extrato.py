@@ -65,7 +65,49 @@ def extrato(autor, cidade, uf="MG"):
     tabela("Maiores favorecidos (total)", lambda r: f"{r['favorecido']} [{r['natureza']}] – {r['municipio']} ({r['uf']})",
            linhas, 20)
     tabela("Natureza do favorecido (total)", lambda r: r["natureza"] or "?", linhas, 8)
+    out += _empresas(linhas)
     return "\n".join(out)
+
+
+def _empresas(linhas, n=12):
+    """Pagamentos a empresas: abre cada emenda no arquivo principal (ação, programa, localidade do gasto)."""
+    import csv
+    import io
+    import zipfile
+    emp = defaultdict(float)
+    cods = defaultdict(set)
+    for r in linhas:
+        if "SOCIEDADE" in _n(r["natureza"]) and "ECONOMIA MISTA" not in _n(r["natureza"]):
+            k = f"{r['favorecido']} – {r['municipio']} ({r['uf']})"
+            emp[k] += r["pago"] or 0
+            cods[k].add(r["codigo"])
+    top = sorted(emp.items(), key=lambda kv: -kv[1])[:n]
+    z = zipfile.ZipFile(io.BytesIO(requests.get(emendas_portal.URL, timeout=600).content))
+    det = {}
+    for nome in ("EmendasParlamentares.csv", "EmendasParlamentares_Convenios.csv"):
+        if nome not in z.namelist():
+            continue
+        bruto = z.read(nome)
+        try:
+            texto = bruto.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            texto = bruto.decode("latin-1")
+        alvo = set().union(*[cods[k] for k, _ in top]) if top else set()
+        for ln in csv.DictReader(io.StringIO(texto), delimiter=";"):
+            c = (ln.get("Código da Emenda") or "").strip()
+            if c in alvo:
+                campos = {k: v.strip() for k, v in ln.items() if k and v and v.strip() not in ("0,00", "0", "-", "Sem informação")}
+                det.setdefault(c, []).append((nome, campos))
+    out = ["## Pagamentos a empresas: o que é cada emenda"]
+    for k, v in top:
+        out.append(f"### {k}: {mi(v)}")
+        for c in sorted(cods[k]):
+            for nome, campos in det.get(c, [])[:2]:
+                keep = {kk: vv for kk, vv in campos.items() if any(t in _n(kk) for t in
+                        ("ACAO", "PROGRAMA", "SUBFUNCAO", "FUNCAO", "LOCALIDADE", "OBJETO", "CONVENENTE", "NUMERO",
+                         "PAGO", "EMPENHADO", "ANO"))}
+                out.append(f"- emenda {c} [{nome.split('_')[-1]}]: " + " | ".join(f"{kk}: {vv}" for kk, vv in keep.items())[:900])
+    return out
 
 
 if __name__ == "__main__":
