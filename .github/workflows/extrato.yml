@@ -1,5 +1,6 @@
 name: Extrato de emendas (sob demanda)
-# Dispara ao alterar dados/extrato.txt com:  AUTOR;Cidade;UF   (ex.: REGINALDO LOPES;São João del-Rei;MG)
+# Dispara ao alterar dados/extrato.txt com:  AUTOR;Cidade;UF  (ex.: REGINALDO LOPES;São João del-Rei;MG)
+#   ou  busca:TERMO;AUTOR  (ex.: busca:BR-265;REGINALDO LOPES)
 on:
   push:
     paths: ["dados/extrato.txt"]
@@ -16,8 +17,11 @@ jobs:
       - run: pip install -r requirements.txt
       - run: |
           mkdir -p dados/diag
-          IFS=';' read -r AUTOR CIDADE UF < dados/extrato.txt
-          python -m robo.extrato "$AUTOR" "$CIDADE" "${UF:-MG}" > dados/diag/extrato.md 2> dados/diag/extrato_erro.txt || true
+          IFS=';' read -r A B C < dados/extrato.txt
+          case "$A" in
+            busca:*) python -m robo.busca_emenda "${A#busca:}" "$B" > dados/diag/extrato.md 2> dados/diag/extrato_erro.txt || true;;
+            *) python -m robo.extrato "$A" "$B" "${C:-MG}" > dados/diag/extrato.md 2> dados/diag/extrato_erro.txt || true;;
+          esac
       - run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
